@@ -25,6 +25,13 @@ cd TGRAG
 # Install core dependencies into an isolated environment
 uv sync
 ```
+## Usage
+
+### Running full data analytics
+```sh
+
+```
+
 
 # Running Interactions
 
