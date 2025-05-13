@@ -15,12 +15,14 @@ Data analysis for TG/RAG project @ CDL
 
 ## cc-webspark: 
 
-graph_name.graph, graph_name.offsets, .indegrees, .outdegrees: actual WebGraph binary files.
+The external repo cc-webspark will create the following analytics for the graph: 
 
-graph_name-ranks.txt.gz: list of node ranks (PageRank).
+```graph_name.graph, graph_name.offsets, .indegrees, .outdegrees```: actual WebGraph binary files.
 
-.scc, .wcc: strongly/weakly connected components.
+```graph_name-ranks.txt.gz```: list of node ranks (PageRank).
 
-.stats, .properties: metadata about the graph.
+```.scc, .wcc```: strongly/weakly connected components.
 
-.txt.gz distribution files (e.g., indegree-distrib, outdegree-distrib): useful for plotting degree distributions
+```.stats, .properties```: metadata about the graph.
+
+```.txt.gz distribution files``` (e.g., indegree-distrib, outdegree-distrib): useful for plotting degree distributions
