@@ -120,6 +120,38 @@ def move_and_rename_webgraph_outputs(
         print(f"Moved {source_file} → {target_path}")
 
 
+def run_webgraph_ranking(
+    graph_name: str,
+    vertices_file: str = "vertices.txt.gz",
+    edges_file: str = "edges.txt.gz",
+    output_dir: str = "output",
+    working_dir: str = "external/cc-webgraph",
+):
+    """
+    Run the webgraph_ranking process_webgraph.sh script using subprocess.
+
+    Parameters:
+        graph_name (str): The name for the graph processing job.
+        vertices_file (str): The name of the vertices file (default: 'vertices.txt.gz').
+        edges_file (str): The name of the edges file (default: 'edges.txt.gz').
+        output_dir (str): Directory where output will be stored (relative to working_dir).
+        working_dir (str): Path to the external/cc-webgraph repo.
+    """
+    script_path = "./src/script/webgraph_ranking/process_webgraph.sh"
+    cmd = [script_path, graph_name, vertices_file, edges_file, output_dir]
+
+    try:
+        result = subprocess.run(
+            cmd, cwd=working_dir, check=True, capture_output=True, text=True
+        )
+        print("WebGraph ranking completed successfully.")
+        print(result.stdout)
+    except subprocess.CalledProcessError as e:
+        print("Error during webgraph ranking:")
+        print(e.stderr)
+        raise
+
+
 def main() -> None:
     run_spark_wat_extraction(
         input_file="input_paths.txt", output_table="wat_output_table"
@@ -133,4 +165,4 @@ def main() -> None:
 
     move_and_rename_webgraph_outputs()
 
-
+    run_webgraph_ranking(graph_name="my_graph", output_dir="rank_output")
