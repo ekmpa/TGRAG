@@ -206,3 +206,5 @@ def Loader(period):
     G = build_graph(edges)
     print("--INFO:G built from Common Crawl + domains successfully.")
     return G, vertices
+
+
