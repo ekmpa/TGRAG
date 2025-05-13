@@ -26,6 +26,22 @@ cd TGRAG
 uv sync
 ```
 
+# Running Interactions
+
+```sh
+uv add --dev ipykernel
+```
+
+```sh
+uv run ipython kernel install --user --env VIRTUAL_ENV $(pwd)/.venv --name=TGRAG
+```
+
+```sh
+uv run --with jupyter jupyter lab
+```
+
+Now you can run the ```interaction.ipynb``` notebook through Jupyter Lab.
+
 ## cc-webspark: 
 
 The external repo cc-webspark will create the following analytics for the graph: 
