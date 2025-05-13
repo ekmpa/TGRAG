@@ -1,4 +1,6 @@
+import glob
 import os
+import shutil
 import subprocess
 
 
@@ -88,6 +90,36 @@ def run_hostlinks_to_graph(
         raise
 
 
+def move_and_rename_webgraph_outputs(
+    source_base: str = "spark-warehouse/webgraph_text",
+    target_base: str = "external/cc-webgraph",
+):
+    """
+    Renames and moves webgraph text output files to the cc-webgraph folder.
+
+    Parameters:
+        source_base (str): Base path to the source output folders (default: 'spark-warehouse/webgraph_text').
+        target_base (str): Path to the target directory (default: 'external/cc-webgraph').
+    """
+    os.makedirs(target_base, exist_ok=True)
+
+    for subdir in ["edges", "vertices"]:
+        source_dir = os.path.join(source_base, subdir)
+        target_filename = f"{subdir}.txt.gz"
+
+        # Find the .txt.gz file (assumes only one file in each subdir)
+        matches = glob.glob(os.path.join(source_dir, "*.txt.gz"))
+        if not matches:
+            raise FileNotFoundError(f"No .txt.gz file found in {source_dir}")
+
+        source_file = matches[0]
+        target_path = os.path.join(target_base, target_filename)
+
+        # Move and rename
+        shutil.move(source_file, target_path)
+        print(f"Moved {source_file} → {target_path}")
+
+
 def main() -> None:
     run_spark_wat_extraction(
         input_file="input_paths.txt", output_table="wat_output_table"
@@ -98,3 +130,7 @@ def main() -> None:
         output_table="webgraph_output_table",
         text_output_path="spark-warehouse/webgraph_text",
     )
+
+    move_and_rename_webgraph_outputs()
+
+
