@@ -1,6 +1,13 @@
 #Ours
 data/
 saved_graphs/
+#External repos
+external/cc-pyspark/crawl-data
+external/cc-pyspark/spark-warehouse
+external/cc-webgraph/output_dir
+external/cc-webgraph/*.txt.gz
+
+
 
 #Gitignore common: 
 # Byte-compiled / optimized / DLL files
