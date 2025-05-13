@@ -33,7 +33,7 @@ uv sync
 ```
 
 
-# Running Interactions
+## Running Interactions
 
 ```sh
 uv add --dev ipykernel
