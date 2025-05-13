@@ -1,5 +1,5 @@
 import networkx as nx
-from load_data import Loader, add_labels
+from utils.load_data import Loader, add_labels
 import pickle
 
 def analyze_graph(G, vertices):

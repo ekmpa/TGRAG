@@ -6,4 +6,7 @@ readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
     "networkx>=3.2.1",
+    "requests>=2.32.3",
 ]
+
+
