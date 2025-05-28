@@ -2,6 +2,13 @@
 Data analysis for TG/RAG project @ CDL 
 
 
+---
+
+To do:
+- Remove old Loaders
+- Get labels
+---
+
 ## Getting Started
 
 ### Prerequisites
@@ -69,8 +76,8 @@ They use java (maven) and pyspark.
 - For Apache Spark, need to `brew install apache-spark`.
 - For both, need to set the global variables, `JAVA_HOME` and `SPARK_HOME`, to the proper path. 
 
-
-###  cc-webspark: 
+---
+### cc-webspark: 
 
 The external repo cc-webspark will create the following analytics for the graph: 
 
@@ -84,11 +91,9 @@ The external repo cc-webspark will create the following analytics for the graph:
 
 ```.txt.gz distribution files``` (e.g., indegree-distrib, outdegree-distrib): useful for plotting degree distributions
 
+---
 
-**Note:** the external 
-
-
-## Running external repos on MacOS
+### Running external repos on MacOS
 
 They are designed for Linux and need a few adjustments to run on MacOS: 
 
@@ -112,3 +117,14 @@ They are designed for Linux and need a few adjustments to run on MacOS:
 2. In `external/cc-webgraph/src/script/webgraph_ranking/process_webgraph.sh`, replace the two `zcat` commands at lines 234 and 237 by `gunzip -c`
 
 Then, can use the `run_external` file normally. 
+
+## Truth labels
+
+We use labels from https://www.domain-quality.info . To do so: 
+
+```sh
+git clone https://github.com/hauselin/domain-quality-ratings
+# And generate the credibility labels:
+python utils/load_labels.py
+```
+
