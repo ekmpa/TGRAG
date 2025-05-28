@@ -2,10 +2,12 @@
 data/
 saved_graphs/
 #External repos
-external/cc-pyspark/crawl-data
-external/cc-pyspark/spark-warehouse
-external/cc-webgraph/output_dir
-external/cc-webgraph/*.txt.gz
+external/cc-pyspark/
+external/cc-webgraph/
+#external/cc-pyspark/crawl-data
+#external/cc-pyspark/spark-warehouse
+#external/cc-webgraph/output_dir
+#external/cc-webgraph/*.txt.gz
 
 #Pycharm
 .idea/
