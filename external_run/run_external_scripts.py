@@ -3,7 +3,6 @@ import os
 import shutil
 import subprocess
 
-
 def run_spark_wat_extraction(
     input_file: str,
     output_table: str,
@@ -25,7 +24,7 @@ def run_spark_wat_extraction(
 
     try:
         result = subprocess.run(
-            [spark_submit, script_path, input_file, output_table],
+            [spark_submit,"--py-files", "external/cc-pyspark/sparkcc.zip", script_path, input_file, output_table],
             check=True,
             capture_output=True,
             text=True,
@@ -33,6 +32,8 @@ def run_spark_wat_extraction(
         print("Spark job completed successfully.")
         print(result.stdout)
     except subprocess.CalledProcessError as e:
+        print("STDOUT:")
+        print(e.stdout)
         print("Error during wat_extract_links job:")
         print(e.stderr)
         raise
@@ -86,28 +87,31 @@ def run_hostlinks_to_graph(
         print(result.stdout)
     except subprocess.CalledProcessError as e:
         print("Error during hostlinks_to_graph Spark job:")
-        print(e.stderr)
+        print("STDOUT:\n", e.stdout)
+        print("STDERR:\n", e.stderr)
         raise
-
 
 def move_and_rename_webgraph_outputs(
     source_base: str = "spark-warehouse/webgraph_text",
-    target_base: str = "external/cc-webgraph",
+    target_base_root: str = "external/cc-webgraph",
 ):
     """
-    Renames and moves webgraph text output files to the cc-webgraph folder.
+    Renames and moves webgraph text output files to a unique cc-webgraph folder based on CURRENT_SLICE.
 
     Parameters:
-        source_base (str): Base path to the source output folders (default: 'spark-warehouse/webgraph_text').
-        target_base (str): Path to the target directory (default: 'external/cc-webgraph').
+        source_base (str): Base path to the source output folders.
+        target_base_root (str): Root path to the target directory.
     """
+    # Get current slice to make the folder unique
+    slice_id = os.getenv('CURRENT_SLICE', 'default_slice')
+    target_base = os.path.join(target_base_root, slice_id)
     os.makedirs(target_base, exist_ok=True)
 
     for subdir in ["edges", "vertices"]:
         source_dir = os.path.join(source_base, subdir)
         target_filename = f"{subdir}.txt.gz"
 
-        # Find the .txt.gz file (assumes only one file in each subdir)
+        # Find the .txt.gz file
         matches = glob.glob(os.path.join(source_dir, "*.txt.gz"))
         if not matches:
             raise FileNotFoundError(f"No .txt.gz file found in {source_dir}")
@@ -115,10 +119,8 @@ def move_and_rename_webgraph_outputs(
         source_file = matches[0]
         target_path = os.path.join(target_base, target_filename)
 
-        # Move and rename
         shutil.move(source_file, target_path)
         print(f"Moved {source_file} → {target_path}")
-
 
 def run_webgraph_ranking(
     graph_name: str,
@@ -137,7 +139,7 @@ def run_webgraph_ranking(
         output_dir (str): Directory where output will be stored (relative to working_dir).
         working_dir (str): Path to the external/cc-webgraph repo.
     """
-    script_path = "./src/script/webgraph_ranking/process_webgraph.sh"
+    script_path = "./external/cc-webgraph/src/script/webgraph_ranking/process_webgraph.sh"
     cmd = [script_path, graph_name, vertices_file, edges_file, output_dir]
 
     try:
@@ -148,9 +150,9 @@ def run_webgraph_ranking(
         print(result.stdout)
     except subprocess.CalledProcessError as e:
         print("Error during webgraph ranking:")
-        print(e.stderr)
+        print("STDOUT:\n", e.stdout)
+        print("STDERR:\n", e.stderr)
         raise
-
 
 def main() -> None:
     run_spark_wat_extraction(
@@ -165,4 +167,19 @@ def main() -> None:
 
     move_and_rename_webgraph_outputs()
 
-    run_webgraph_ranking(graph_name="my_graph", output_dir="rank_output")
+    # Dynamically get the slice
+    slice_id = os.getenv('CURRENT_SLICE', 'default_slice')
+    vertices_file = f"external/cc-webgraph/{slice_id}/vertices.txt.gz"
+    edges_file = f"external/cc-webgraph/{slice_id}/edges.txt.gz"
+    output_dir = f"rank_output/{slice_id}"
+
+    run_webgraph_ranking(
+        graph_name=f"graph_{slice_id}",
+        vertices_file=vertices_file,
+        edges_file=edges_file,
+        output_dir=output_dir,
+        working_dir="."  
+    )
+
+if __name__ == "__main__":
+    main()

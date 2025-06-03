@@ -1,14 +1,6 @@
 # TGRAG
 Data analysis for TG/RAG project @ CDL 
 
-
----
-
-To do:
-- Remove old Loaders
-- Get labels
----
-
 ## Getting Started
 
 ### Prerequisites
@@ -75,6 +67,25 @@ They use java (maven) and pyspark.
 - For Java, need to `cd external/cc-webgraph`, then `mvn package`.
 - For Apache Spark, need to `brew install apache-spark`.
 - For both, need to set the global variables, `JAVA_HOME` and `SPARK_HOME`, to the proper path. 
+
+To get valid WAT files, 
+
+```sh
+# List available slices: 
+curl -s https://index.commoncrawl.org/collinfo.json | jq '.[].id'
+
+# Then, download
+curl -O https://data.commoncrawl.org/crawl-data/CC-MAIN-2024-10/wat.paths.gz
+
+# Set the slice variable for the run_external_scripts.py script 
+export CURRENT_SLICE=$(echo ${CC-MAIN-2024-10} | tr '-' '_') 
+
+# And pipe to input_paths.txt 
+printf "file://%s/%s\n" "$PWD" CC-MAIN-*.warc.wat.gz > input_paths.txt
+
+# Between slices, need to empty the warehouse 
+rm -rf spark-warehouse/*              
+```
 
 ---
 ### cc-webspark: 
