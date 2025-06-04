@@ -14,12 +14,14 @@ if [ "$#" -lt 1 ]; then
   exit 1
 fi
 
-SLICE="$1"  # Time slice, e.g., CC-MAIN-2014-15
-NUM_FILES="${2:-25}"  # Optional second argument; default to 25 if not set
+SLICE="$1"  # e.g., CC-MAIN-2015-35
+NUM_FILES="${2:-25}"  # default to 25
+
+SLICE_DIR="wat_files/${SLICE}"
 
 echo ">>> Fetching WAT paths for slice $SLICE"
 
-# Download the wat.paths.gz for the given slice
+# Download wat.paths.gz
 if curl -O "https://data.commoncrawl.org/crawl-data/${SLICE}/wat.paths.gz"; then
   echo "Downloaded wat.paths.gz successfully."
 else
@@ -35,18 +37,17 @@ else
   exit 1
 fi
 
-# Export CURRENT_SLICE env variable
 export CURRENT_SLICE=$(echo "${SLICE}" | tr '-' '_')
 
 # Count total available WAT files
 TOTAL_FILES=$(wc -l < wat.paths | xargs)
 echo ">>> Requesting $NUM_FILES files out of $TOTAL_FILES WAT files available in slice $SLICE."
 
-mkdir -p wat_files
+mkdir -p "$SLICE_DIR"
 
-# Detect existing WAT files
+# Detect existing WAT files for this slice
 existing_files=()
-for f in wat_files/*.warc.wat.gz; do
+for f in "$SLICE_DIR"/*.warc.wat.gz; do
   if [[ -f "$f" ]]; then
     existing_files+=("$f")
   fi
@@ -62,36 +63,34 @@ else
   /opt/homebrew/bin/gshuf wat.paths | head -n "$NUM_FILES" > selected_paths.txt || true
 fi
 
-# Download WAT files (only if not already present)
+# Download WAT files
 echo ">>> Downloading WAT files..."
 i=0
 while read -r path; do
-  # If 'path' is a local file (existing) -> skip download
-  if [[ "$path" == wat_files/* ]]; then
-    echo "[$i] Skipping download, already have $path"
+  filename=$(basename "$path")
+  target_path="${SLICE_DIR}/${filename}"
+  if [ -f "$target_path" ]; then
+    echo "[$i] Skipping $filename (already exists)."
   else
-    filename=$(basename "$path")
-    target_path="wat_files/$filename"
-    if [ -f "$target_path" ]; then
-      echo "[$i] Skipping $filename (already exists)."
+    echo "[$i] Downloading https://data.commoncrawl.org/${path}..."
+    if curl -o "$target_path" "https://data.commoncrawl.org/${path}"; then
+      echo "[$i] Success."
     else
-      echo "[$i] Downloading https://data.commoncrawl.org/${path}..."
-      if curl -o "$target_path" "https://data.commoncrawl.org/${path}"; then
-        echo "[$i] Success."
-      else
-        echo "[$i] Failed to download: ${path}"
-      fi
+      echo "[$i] Failed to download: ${path}"
     fi
   fi
   i=$((i + 1))
 done < selected_paths.txt
 
-# create input_paths.txt (only from current wat_files/)
+# Create input_paths.txt
 echo ">>> Creating input_paths.txt..."
-> input_paths.txt  # empty the file first
-for file in wat_files/*.warc.wat.gz; do
+> input_paths.txt
+for file in "$SLICE_DIR"/*.warc.wat.gz; do
   abs_path=$(realpath "$file")
   echo "file://$abs_path" >> input_paths.txt
 done
 
-echo ">>> Done! Using $NUM_FILES out of $TOTAL_FILES available files. Ready to run Spark scripts."
+echo ">>> Done! Using $NUM_FILES out of $TOTAL_FILES available files."
+
+echo ">>> Start running external scripts"
+python3 external_run/run_external_scripts.py
