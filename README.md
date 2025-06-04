@@ -76,6 +76,7 @@ curl -s https://index.commoncrawl.org/collinfo.json | jq '.[].id'
 
 # Then, download
 curl -O https://data.commoncrawl.org/crawl-data/CC-MAIN-2024-10/wat.paths.gz
+gunzip wat.paths.gz
 
 # Set the slice variable for the run_external_scripts.py script 
 export CURRENT_SLICE=$(echo ${CC-MAIN-2024-10} | tr '-' '_') 
