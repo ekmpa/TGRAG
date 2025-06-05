@@ -24,10 +24,13 @@ git clone git@github.com:ekmpa/TGRAG.git
 cd TGRAG
 
 # Install core dependencies into an isolated environment
-uv sync
+uv sync 
 
 # The isolated env is .venv
 source .venv/bin/activate
+
+# If you have your environment and want to sync that instead, run 
+uv sync --active
 ```
 ## Usage
 

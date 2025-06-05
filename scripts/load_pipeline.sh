@@ -59,7 +59,7 @@ if [ ${#existing_files[@]} -ge "$NUM_FILES" ]; then
   printf "%s\n" "${existing_files[@]}" | head -n "$NUM_FILES" > selected_paths.txt
 else
   echo "Not enough existing WAT files (${#existing_files[@]}), selecting new ones."
-  /opt/homebrew/bin/gshuf wat.paths | head -n "$NUM_FILES" > selected_paths.txt || true
+  shuf wat.paths | head -n "$NUM_FILES" > selected_paths.txt || true
 fi
 
 # Download WAT files
