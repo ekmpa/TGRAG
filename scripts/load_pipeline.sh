@@ -18,6 +18,7 @@ SLICE="$1"  # e.g., CC-MAIN-2015-35
 NUM_FILES="${2:-25}"  # default to 25
 
 SLICE_DIR="wat_files/${SLICE}"
+export CURRENT_SLICE=$(echo "${SLICE}" | tr '-' '_')
 
 echo ">>> Fetching WAT paths for slice $SLICE"
 
@@ -36,8 +37,6 @@ else
   echo "Failed to unzip wat.paths.gz."
   exit 1
 fi
-
-export CURRENT_SLICE=$(echo "${SLICE}" | tr '-' '_')
 
 # Count total available WAT files
 TOTAL_FILES=$(wc -l < wat.paths | xargs)
@@ -95,5 +94,26 @@ echo ">>> Done! Using $NUM_FILES out of $TOTAL_FILES available files."
 export PYSPARK_PYTHON=$(which python)
 export PYSPARK_DRIVER_PYTHON=$(which python)
 
-echo ">>> Start running external scripts"
-python3 external_run/run_external_scripts.py
+# Define graph file locations
+VERTICES_FILE="external/cc-webgraph/${CURRENT_SLICE}/vertices.txt.gz"
+EDGES_FILE="external/cc-webgraph/${CURRENT_SLICE}/edges.txt.gz"
+
+# Only re-run if the graph files are missing
+if [[ -f "$VERTICES_FILE" && -f "$EDGES_FILE" ]]; then
+  echo ">>> Found existing graph files. Skipping Spark jobs."
+else
+  echo ">>> Running external scripts."
+  python3 external_run/run_external_scripts.py
+fi
+
+# Show final graph stats
+if [[ -f "$VERTICES_FILE" && -f "$EDGES_FILE" ]]; then
+  echo ">>> Final graph statistics:"
+  num_nodes=$(gunzip -c "$VERTICES_FILE" | wc -l)
+  num_edges=$(gunzip -c "$EDGES_FILE" | wc -l)
+  echo "Graph statistics for slice $SLICE:"
+  echo "  Nodes: $num_nodes"
+  echo "  Edges: $num_edges"
+else
+  echo ">>> Graph files not found, cannot compute final statistics."
+fi
