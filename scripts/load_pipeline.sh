@@ -92,5 +92,8 @@ done
 
 echo ">>> Done! Using $NUM_FILES out of $TOTAL_FILES available files."
 
+export PYSPARK_PYTHON=$(which python)
+export PYSPARK_DRIVER_PYTHON=$(which python)
+
 echo ">>> Start running external scripts"
 python3 external_run/run_external_scripts.py
