@@ -60,7 +60,6 @@ class TemporalGraphMerger:
         self.current_time_id += 1
 
     def save(self, output_dir):
-        """Save the temporal graph in a specified folder."""
         os.makedirs(output_dir, exist_ok=True)
 
         output_edges_path = os.path.join(output_dir, "temporal_edges.csv")
@@ -77,7 +76,6 @@ class TemporalGraphMerger:
         print(f"Saved merged nodes to {output_nodes_path}")
 
     def print_stats(self):
-        """Print statistics about the merge."""
         print("\n=== Individual Slice Stats ===")
         for stat in self.slice_stats:
             print(f"Slice {stat['slice_id']}: {stat['num_nodes']} nodes, {stat['num_edges']} edges")
