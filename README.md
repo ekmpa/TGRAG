@@ -92,7 +92,7 @@ The external repo cc-webspark will create the following analytics for the graph:
 
 ---
 
-### Running external repos on MacOS
+<!-- ### Running external repos on MacOS
 
 They are designed for Linux and need a few adjustments to run on MacOS: 
 
@@ -115,7 +115,7 @@ They are designed for Linux and need a few adjustments to run on MacOS:
 
 2. In `external/cc-webgraph/src/script/webgraph_ranking/process_webgraph.sh`, replace the two `zcat` commands at lines 234 and 237 by `gunzip -c`
 
-Then, can use the `run_external` file normally. 
+Then, can use the `run_external` file normally.  -->
 
 ## Truth labels
 
