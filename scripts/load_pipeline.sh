@@ -2,6 +2,11 @@
 
 # Usage: ./download_slice.sh CC-MAIN-YYYY-NN [NUM_FILES]
 
+# For cluster usage
+#module load python/3.8
+#source .venv/bin/activate
+#uv sync 
+
 export PATH="/opt/homebrew/bin:$PATH"
 set -euo pipefail
 
@@ -17,7 +22,10 @@ fi
 SLICE="$1"  # e.g., CC-MAIN-2015-35
 NUM_FILES="${2:-25}"  # default to 25
 
+# For local usage : 
 SLICE_DIR="wat_files/${SLICE}"
+# for clusters:
+# SLICE_DIR="/network/scratch/k/kondrupe/wat_files/${SLICE}"
 export CURRENT_SLICE=$(echo "${SLICE}" | tr '-' '_')
 
 echo ">>> Fetching WAT paths for slice $SLICE"
@@ -98,13 +106,14 @@ export PYSPARK_DRIVER_PYTHON=$(which python)
 VERTICES_FILE="external/cc-webgraph/${CURRENT_SLICE}/vertices.txt.gz"
 EDGES_FILE="external/cc-webgraph/${CURRENT_SLICE}/edges.txt.gz"
 
-# Only re-run if the graph files are missing
-if [[ -f "$VERTICES_FILE" && -f "$EDGES_FILE" ]]; then
-  echo ">>> Found existing graph files. Skipping Spark jobs."
-else
-  echo ">>> Running external scripts."
-  python3 external_run/run_external_scripts.py
+# Remove any old graph files
+if [[ -f "$VERTICES_FILE" || -f "$EDGES_FILE" ]]; then
+  echo ">>> Removing existing graph files."
+  rm -f "$VERTICES_FILE" "$EDGES_FILE"
 fi
+
+echo ">>> Running external scripts."
+python3 external_run/run_external_scripts.py
 
 # Show final graph stats
 if [[ -f "$VERTICES_FILE" && -f "$EDGES_FILE" ]]; then
@@ -117,3 +126,6 @@ if [[ -f "$VERTICES_FILE" && -f "$EDGES_FILE" ]]; then
 else
   echo ">>> Graph files not found, cannot compute final statistics."
 fi
+
+echo ">>> Running label matching."
+$PYSPARK_PYTHON utils/load_labels.py
