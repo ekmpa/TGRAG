@@ -1,21 +1,85 @@
 [project]
 name = "tgrag"
 version = "0.1.0"
-description = "Add your description here"
+description = "Temporal Graph Analysis on Web-Data"
 readme = "README.md"
 requires-python = ">=3.9"
+authors = [
+{name = "Sebastian Sabry", email = "sebastian.sabry@mail.mcgill.ca"}
+]
 dependencies = [
     "neo4j-viz>=0.2.6",
     "networkx>=3.2.1",
     "requests>=2.32.3",
+    "scipy>=1.13.1",
 ]
 
 [dependency-groups]
 dev = [
     "ipykernel>=6.29.5",
+    "isort>=6.0.1",
     "matplotlib>=3.9.4",
+    "mypy>=1.16.0",
     "pandas>=2.2.3",
+    "pre-commit>=4.2.0",
     "pyqt6>=6.9.0",
+    "ruff>=0.11.13",
+    "types-pyyaml>=6.0.12.20240917",
+]
+
+analytics = [
+]
+
+[tool.mypy]
+install_types = true
+non_interactive = true
+ignore_missing_imports = true
+show_error_codes = true
+warn_redundant_casts = true
+warn_unused_configs = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+
+[tool.isort]
+multi_line_output = 3
+include_trailing_comma = true
+skip = [".gitignore", "__init__.py"]
+
+[tool.ruff.lint]
+select = [
+    "D",  # pydocstyle
+]
+ignore = [
+    "D100",  # Ignore "Missing docstring in public module"
+    "D101",  # Ignore "Missing docstring in public class"
+    "D102",  # Ignore "Missing docstring in public method"
+    "D103",  # Ignore "Missing docstring in public function"
+    "D104",  # Ignore "Missing docstring in public package"
+    "D105",  # Ignore "Missing docstring in magic method"
+    "D107",  # Ignore "Missing docstring in __init__"
+    "D205",  # Ignore "blank line required between summary line and description"
+]
+
+[tool.ruff.format]
+quote-style = "single"
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--capture=no",
+    "--color=yes",
+    "-vvv",
 ]
 
 
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "pass",
+    "raise NotImplementedError",
+    "register_parameter",
+    "torch.cuda.is_available",
+]

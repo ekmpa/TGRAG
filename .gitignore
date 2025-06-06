@@ -14,7 +14,7 @@ external/cc-webgraph/
 
 
 
-#Gitignore common: 
+#Gitignore common:
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

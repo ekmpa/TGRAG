@@ -7,7 +7,7 @@ set -euo pipefail
 
 # 0: Clean up spark-warehouse (for multiple runs)
 echo ">>> Cleaning spark-warehouse..."
-rm -rf spark-warehouse/* 
+rm -rf spark-warehouse/*
 
 if [ "$#" -ne 1 ]; then
   echo "Usage: $0 <CC-MAIN-YYYY-NN>"
