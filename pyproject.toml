@@ -8,11 +8,13 @@ authors = [
 {name = "Sebastian Sabry", email = "sebastian.sabry@mail.mcgill.ca"}
 ]
 dependencies = [
+    "boto3>=1.38.33",
     "neo4j-viz>=0.2.6",
     "networkx>=3.2.1",
     "pyspark>=4.0.0",
     "requests>=2.32.3",
     "scipy>=1.13.1",
+    "warcio>=1.7.5",
 ]
 
 [dependency-groups]
