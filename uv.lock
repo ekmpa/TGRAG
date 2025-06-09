@@ -1151,6 +1151,15 @@ wheels = [
 ]
 
 [[package]]
+name = "py4j"
+version = "0.10.9.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/38/31/0b210511177070c8d5d3059556194352e5753602fa64b85b7ab81ec1a009/py4j-0.10.9.9.tar.gz", hash = "sha256:f694cad19efa5bd1dee4f3e5270eb406613c974394035e5bfc4ec1aba870b879", size = 761089 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bd/db/ea0203e495be491c85af87b66e37acfd3bf756fd985f87e46fc5e3bf022c/py4j-0.10.9.9-py2.py3-none-any.whl", hash = "sha256:c7c26e4158defb37b0bb124933163641a2ff6e3a3913f7811b0ddbe07ed61533", size = 203008 },
+]
+
+[[package]]
 name = "pycparser"
 version = "2.22"
 source = { registry = "https://pypi.org/simple" }
@@ -1374,6 +1383,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/5a/1b/97ba52732b3bb45607e283d3bccd2776907d28b028509bee8d3727e8f675/PyQt6_sip-13.10.0-cp39-cp39-manylinux_2_5_x86_64.manylinux1_x86_64.whl", hash = "sha256:21417ffd2c489afef114cb09683bbc0fb24d78df848a21fc0d09e70ecbb0a4a4", size = 281281 },
     { url = "https://files.pythonhosted.org/packages/7d/d5/c95c0da87151fd17f412af39b8381d6369b74c6e21326f6a0694020eaf9e/PyQt6_sip-13.10.0-cp39-cp39-win_amd64.whl", hash = "sha256:6e1b1f7a29290afc83bcd9970e0cffa2d0da87d81796b6eab7b6f583e4f49652", size = 53661 },
 ]
+
+[[package]]
+name = "pyspark"
+version = "4.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "py4j" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/0e/5b38d51f1b1c2618cccfbf35093268665af9a3bdb493e5a3ecd991def633/pyspark-4.0.0.tar.gz", hash = "sha256:38db1b4f6095a080d7605e578d775528990e66dc326311d93e94a71cfc24e5a5", size = 434132212 }
 
 [[package]]
 name = "python-dateutil"
@@ -1664,6 +1682,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "neo4j-viz" },
     { name = "networkx" },
+    { name = "pyspark" },
     { name = "requests" },
     { name = "scipy" },
 ]
@@ -1685,6 +1704,7 @@ dev = [
 requires-dist = [
     { name = "neo4j-viz", specifier = ">=0.2.6" },
     { name = "networkx", specifier = ">=3.2.1" },
+    { name = "pyspark", specifier = ">=4.0.0" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "scipy", specifier = ">=1.13.1" },
 ]

@@ -10,6 +10,7 @@ authors = [
 dependencies = [
     "neo4j-viz>=0.2.6",
     "networkx>=3.2.1",
+    "pyspark>=4.0.0",
     "requests>=2.32.3",
     "scipy>=1.13.1",
 ]
