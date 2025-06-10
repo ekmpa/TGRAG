@@ -9,6 +9,7 @@ authors = [
 ]
 dependencies = [
     "boto3>=1.38.33",
+    "idna>=3.10",
     "neo4j-viz>=0.2.6",
     "networkx>=3.2.1",
     "pyspark>=4.0.0",
