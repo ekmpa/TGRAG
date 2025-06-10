@@ -1,113 +1,185 @@
 import gzip
 import os
+import sys
 import pandas as pd
+from urllib.parse import urlparse
+
+# this scripts merges multiple CC-MAIN slices into a temporal graph
+# and allows for continual addition of new slices 
 
 class TemporalGraphMerger:
-    def __init__(self):
-        self.domain_to_node = {}
+    """
+    Merges multiple slices into a temporal graph (both edges and nodes are temporal). 
+    Then saves the graph (CSV) and can continually add slices to it.
+    """
+    def __init__(self, output_dir):
+        self.output_dir = output_dir
         self.edges = []
-        self.next_node_id = 0
-        self.current_time_id = 0
-        self.slice_stats = []
+        self.domain_to_node = {}  # domain → {id, first_seen, last_seen}
+        self.slice_node_sets = {} # used for overlap stats 
+        self.next_node_id = 0 
+        self.time_ids_seen = set() # to track seen slices 
+        self._last_overlap = None  # snapshot for single-slice mode
+        self._load_existing() # load existing graph if exists 
+
+    def _load_existing(self):
+        """ Reconstruct graph from existing CSVs """
+        edges_path = os.path.join(self.output_dir, "temporal_edges.csv")
+        nodes_path = os.path.join(self.output_dir, "temporal_nodes.csv")
+
+        if os.path.exists(edges_path) and os.path.exists(nodes_path):
+            df_edges = pd.read_csv(edges_path)
+            df_nodes = pd.read_csv(nodes_path)
+
+            self.edges = list(df_edges.itertuples(index=False, name=None))
+            self.domain_to_node = {
+                row["domain"]: {
+                    "id": row["node_id"],
+                    "first_seen": row["first_seen"],
+                    "last_seen": row["last_seen"],
+                }
+                for _, row in df_nodes.iterrows()
+            }
+
+            self.next_node_id = max(d["id"] for d in self.domain_to_node.values()) + 1
+            self.time_ids_seen = set(df_edges["time_id"])
+            print(f"Loaded existing graph with {len(self.domain_to_node)} nodes and {len(self.edges)} edges")
+
+    def _normalize_domain(self, raw):
+        """ Normalize domain strings for consistency across slices """
+        raw = raw.strip().lower()
+        if "://" in raw:
+            raw = urlparse(raw).hostname or raw
+        if raw.startswith("www."):
+            raw = raw[4:]
+        if ':' in raw:
+            raw = raw.split(':')[0]
+        if raw.endswith("."):
+            raw = raw[:-1]
+        return raw
 
     def _load_vertices(self, filepath):
-        domain_list = []
+        """ Helper to extract and load vertices from vertices.txt.gz """
+        domains = []
         with gzip.open(filepath, "rt", encoding="utf-8", errors="ignore") as f:
             for line in f:
-                domain = line.strip().lower()
-                if domain:
-                    domain_list.append(domain)
-        return domain_list
+                parts = line.strip().split("\t")
+                norm = self._normalize_domain(parts[1])
+                domains.append(norm)
+        return domains
 
     def _load_edges(self, filepath):
-        edges = []
+        """ Helper to extract and load edges from edges.txt.gz """
         with gzip.open(filepath, "rt", encoding="utf-8", errors="ignore") as f:
-            for line in f:
-                parts = line.strip().split()
-                if len(parts) == 2:
-                    src, dst = map(int, parts)
-                    edges.append((src, dst))
-        return edges
+            return [tuple(map(int, line.strip().split())) for line in f if len(line.strip().split()) == 2]
+
+    def _slice_to_time_id(self, slice_id):
+        """ Yield timestamp from slice ID (current logic: CC-MAIN-YYYY-NN -> YYYYNN) """
+        try:
+            parts = slice_id.split("-")
+            return int(parts[2]) * 100 + int(parts[3])
+        except (IndexError, ValueError):
+            raise ValueError(f"Invalid slice format: {slice_id}. Expected CC-MAIN-YYYY-NN.")
 
     def add_graph(self, vertices_path, edges_path, slice_id):
-        """Add one slice (graph) to the temporal graph."""
-        domains = self._load_vertices(vertices_path)
-        num_nodes = len(domains)
+        """ Add new slice to the existing temporal graph"""
+        time_id = self._slice_to_time_id(slice_id)
+        if time_id in self.time_ids_seen:
+            print(f"Skipping slice {slice_id}: time_id {time_id} already exists.")
+            return
 
+        # snapshot current node IDs before mutation
+        existing_node_ids = {v["id"] for v in self.domain_to_node.values()}
+
+        # load vertices and edges using local -> global mapping
+        domains = self._load_vertices(vertices_path)
         local_to_global = {}
+        new_node_ids = set()
+
         for local_id, domain in enumerate(domains):
             if domain not in self.domain_to_node:
-                self.domain_to_node[domain] = self.next_node_id
+                self.domain_to_node[domain] = {
+                    "id": self.next_node_id,
+                    "first_seen": time_id,
+                    "last_seen": time_id,
+                }
                 self.next_node_id += 1
-            local_to_global[local_id] = self.domain_to_node[domain]
+            else:
+                self.domain_to_node[domain]["last_seen"] = time_id
+
+            node_id = self.domain_to_node[domain]["id"]
+            local_to_global[local_id] = node_id
+            new_node_ids.add(node_id)
 
         edges = self._load_edges(edges_path)
-        num_edges = len(edges)
-
         for src_local, dst_local in edges:
             src_global = local_to_global.get(src_local)
             dst_global = local_to_global.get(dst_local)
             if src_global is not None and dst_global is not None:
-                self.edges.append((src_global, dst_global, self.current_time_id))
+                self.edges.append((src_global, dst_global, time_id))
 
-        self.slice_stats.append({
-            "slice_id": slice_id,
-            "domains_set": set(domains),
-            "num_nodes": num_nodes,
-            "num_edges": num_edges
-        })
+        self.slice_node_sets[slice_id] = new_node_ids
+        self.time_ids_seen.add(time_id)
 
-        self.current_time_id += 1
+        print(f"Added slice {slice_id} (time_id {time_id}): {len(new_node_ids)} nodes, {len(edges)} edges")
 
-    def save(self, output_dir):
-        os.makedirs(output_dir, exist_ok=True)
+        # store overlap with pre-existing graph if this is the only slice being added now
+        if len(self.slice_node_sets) == 1:
+            self._last_overlap = len(existing_node_ids & new_node_ids)
 
-        output_edges_path = os.path.join(output_dir, "temporal_edges.csv")
-        output_nodes_path = os.path.join(output_dir, "temporal_nodes.csv")
+    def save(self):
+        """ Save merged graph to CSV """
+        os.makedirs(self.output_dir, exist_ok=True)
 
-        df_edges = pd.DataFrame(self.edges, columns=["src", "dst", "time_id"])
-        df_edges.to_csv(output_edges_path, index=False)
+        pd.DataFrame(self.edges, columns=["src", "dst", "time_id"]).to_csv(
+            os.path.join(self.output_dir, "temporal_edges.csv"), index=False)
 
-        df_nodes = pd.DataFrame.from_dict(self.domain_to_node, orient="index", columns=["node_id"])
-        df_nodes.index.name = "domain"
-        df_nodes.reset_index().to_csv(output_nodes_path, index=False)
+        df_nodes = pd.DataFrame([
+            {
+                "domain": domain,
+                "node_id": info["id"],
+                "first_seen": info["first_seen"],
+                "last_seen": info["last_seen"],
+            }
+            for domain, info in self.domain_to_node.items()
+        ])
+        df_nodes.to_csv(os.path.join(self.output_dir, "temporal_nodes.csv"), index=False)
 
-        print(f"\nSaved merged edges to {output_edges_path}")
-        print(f"Saved merged nodes to {output_nodes_path}")
+    def print_overlap(self):
+        """ Print overlap stats across all / added slices """
+        all_sets = list(self.slice_node_sets.values())
 
-    def print_stats(self):
-        print("\n=== Individual Slice Stats ===")
-        for stat in self.slice_stats:
-            print(f"Slice {stat['slice_id']}: {stat['num_nodes']} nodes, {stat['num_edges']} edges")
+        if not all_sets:
+            return
 
-        print("\n=== Merged Graph Stats ===")
-        all_domains = [stat["domains_set"] for stat in self.slice_stats]
-        total_unique_domains = set.union(*all_domains)
-        print(f"Total unique nodes: {len(total_unique_domains)}")
-        print(f"Total edges (with time info): {len(self.edges)}")
+        if len(all_sets) == 1 and self._last_overlap is not None:
+            print(f"Nodes in common with existing graph: {self._last_overlap}")
+        else:
+            common = set.intersection(*all_sets)
+            print(f"Nodes in common across all slices: {len(common)}")
 
-        if len(all_domains) > 1:
-            common_domains = set.intersection(*all_domains)
-            print(f"Nodes in common across all slices: {len(common_domains)}")
+def main(slices):
+    base_path = "external/cc-webgraph"
+    output_dir = os.path.join(base_path, "temporal")
 
-def main(
-    slices,
-    base_path="external/cc-webgraph",
-    output_dir="external/cc-webgraph/temporal"
-):
-    merger = TemporalGraphMerger()
+    merger = TemporalGraphMerger(output_dir)
 
     for slice_id in slices:
-        folder_name = slice_id.replace("-", "_")
-        vertices_path = os.path.join(base_path, folder_name, "vertices.txt.gz")
-        edges_path = os.path.join(base_path, folder_name, "edges.txt.gz")
+        folder = slice_id.replace("-", "_")
+        vertices_path = os.path.join(base_path, folder, "vertices.txt.gz")
+        edges_path = os.path.join(base_path, folder, "edges.txt.gz")
 
-        print(f"Adding slice {slice_id} with vertices {vertices_path} and edges {edges_path}")
+        if not (os.path.exists(vertices_path) and os.path.exists(edges_path)):
+            print(f"Missing data for {slice_id}: Skipping")
+            continue
+
         merger.add_graph(vertices_path, edges_path, slice_id)
 
-    merger.save(output_dir)
-    merger.print_stats()
+    merger.save()
+    merger.print_overlap()
 
 if __name__ == "__main__":
-    slices = ["CC-MAIN-2014-10", "CC-MAIN-2014-15"]
-    main(slices)
+    if len(sys.argv) < 2:
+        print("Usage: ./merge_pipeline.sh CC-MAIN-YYYY-NN [CC-MAIN-YYYY-NN ...]")
+        sys.exit(1)
+    main(sys.argv[1:])
