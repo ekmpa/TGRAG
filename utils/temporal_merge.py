@@ -3,6 +3,9 @@ import os
 import sys
 import pandas as pd
 from urllib.parse import urlparse
+import gzip
+import re
+from glob import glob
 
 # this scripts merges multiple CC-MAIN slices into a temporal graph
 # and allows for continual addition of new slices 
@@ -74,13 +77,28 @@ class TemporalGraphMerger:
             return [tuple(map(int, line.strip().split())) for line in f if len(line.strip().split()) == 2]
 
     def _slice_to_time_id(self, slice_id):
-        """ Yield timestamp from slice ID (current logic: CC-MAIN-YYYY-NN -> YYYYNN) """
-        try:
-            parts = slice_id.split("-")
-            return int(parts[2]) * 100 + int(parts[3])
-        except (IndexError, ValueError):
-            raise ValueError(f"Invalid slice format: {slice_id}. Expected CC-MAIN-YYYY-NN.")
+        """
+        Yield timestamp from slice ID (current logic: YYYYMMDD)
+        """
 
+        wat_dir = os.path.join("wat_files", slice_id)
+        wat_files = sorted(glob(os.path.join(wat_dir, "*.wat.gz")))
+        warc_date_re = re.compile(r"WARC-Date:\s*(\d{4})-(\d{2})-(\d{2})")
+
+        for path in wat_files:
+            try:
+                with gzip.open(path, "rt", encoding="utf-8", errors="ignore") as f:
+                    for line in f:
+                        match = warc_date_re.search(line)
+                        if match:
+                            yyyy, mm, dd = match.groups()
+                            return int(f"{yyyy}{mm}{dd}")
+            except Exception as e:
+                print(f"Warning: failed to parse {path}: {e}")
+                continue
+
+        raise ValueError(f"Could not extract scrape date from any WAT files in {wat_dir}")
+    
     def add_graph(self, vertices_path, edges_path, slice_id):
         """ Add new slice to the existing temporal graph"""
         time_id = self._slice_to_time_id(slice_id)
