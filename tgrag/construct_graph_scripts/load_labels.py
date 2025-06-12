@@ -1,5 +1,4 @@
 import gzip
-import os
 
 import pandas as pd
 import tldextract
@@ -42,20 +41,15 @@ def extract_graph_domains(filepath: str, use_core: bool = False) -> pd.DataFrame
     return pd.DataFrame(parsed, columns=['node_id', 'match_domain'])
 
 
-def main() -> None:
+def get_credibility_intersection(source_path: str) -> None:
     # Read the slice from env variable
-    slice_id = os.getenv('CURRENT_SLICE')
-    print(f'INFO: Using slice ID: {slice_id}')
-    if not slice_id:
-        raise EnvironmentError('CURRENT_SLICE environment variable is not set.')
-
     use_core = True
 
     # Adjust paths
-    cred_scores_path = 'domain-quality-ratings/data/domain_pc1.csv'
-    vertices_path = f'external/cc-webgraph/{slice_id}/vertices.txt.gz'
+    cred_scores_path = f'{source_path}/dqr/domain_pc1.csv'
+    vertices_path = f'{source_path}/output_text_dir/vertices.txt.gz'
     print(f'Opening vertices file: {vertices_path}')
-    output_csv_path = f'external/cc-webgraph/{slice_id}/node_credibility.csv'
+    output_csv_path = f'{source_path}/output_text_dir/node_credibility.csv'
 
     cred_df = load_credibility_scores(cred_scores_path, use_core=use_core)
     print(f'INFO: Loaded credibility scores, use_core = {use_core}')
@@ -91,7 +85,3 @@ def main() -> None:
     print(
         f'{matched_labels} / {total_labels} credibility labels matched at least once on the graph ({label_percentage:.2f}%).'
     )
-
-
-if __name__ == '__main__':
-    main()
