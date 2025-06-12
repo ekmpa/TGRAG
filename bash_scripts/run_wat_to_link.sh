@@ -3,11 +3,19 @@
 # Fail on first error
 set -e
 
+# Check if CRAWL argument is provided
+if [ -z "$1" ]; then
+    echo "Usage: $0 <CRAWL-ID>"
+    echo "Example: $0 CC-MAIN-2017-13"
+    exit 1
+fi
+
+CRAWL="$1"
+
 # Get the root of the project (one level above this script's directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 DATA_DIR="$PROJECT_ROOT/data"
-CRAWL=CC-MAIN-2017-13
 INPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/input"
 
 VENV_PATH="$PROJECT_ROOT/.venv"
