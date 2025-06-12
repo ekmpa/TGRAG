@@ -2,7 +2,7 @@ ci:
   autofix_prs: true
   autoupdate_schedule: weekly
 
-exclude: scripts/cc-scripts/
+exclude: tgrag/cc-scripts/
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
