@@ -117,13 +117,4 @@ They are designed for Linux and need a few adjustments to run on MacOS:
 
 Then, can use the `run_external` file normally.  -->
 
-## Truth labels
-
-We use labels from https://www.domain-quality.info . To do so: 
-
-```sh
-git clone https://github.com/hauselin/domain-quality-ratings
-# And generate the credibility labels:
-python utils/load_labels.py
-```
 
