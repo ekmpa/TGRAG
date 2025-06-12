@@ -28,7 +28,7 @@ export PYSPARK_PYTHON="$VENV_PATH/bin/python"
 export PYSPARK_DRIVER_PYTHON="$VENV_PATH/bin/python"
 
 #Set output for text
-OUTPUT_DIR="$DATA_DIR/output_text_dir"
+OUTPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/output_text_dir"
 
 # Clean previous outputs if they exist
 rm -rf "$OUTPUT_DIR"
@@ -40,8 +40,8 @@ mkdir -p "$OUTPUT_DIR"
   --executor-memory 2g \
   --conf spark.sql.shuffle.partitions=4 \
   --conf spark.io.compression.codec=snappy \
-  --py-files "$PROJECT_ROOT/scripts/cc-scripts/sparkcc.py,$PROJECT_ROOT/scripts/cc-scripts/wat_extract_links.py,$PROJECT_ROOT/scripts/cc-scripts/json_importer.py" \
-  "$PROJECT_ROOT/scripts/cc-scripts/hostlinks_to_graph.py" \
+  --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py,$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py,$PROJECT_ROOT/tgrag/cc-scripts/json_importer.py" \
+  "$PROJECT_ROOT/tgrag/cc-scripts/hostlinks_to_graph.py" \
   "spark-warehouse/wat_output_table" \
   host_graph_output \
   --output_format "parquet" \

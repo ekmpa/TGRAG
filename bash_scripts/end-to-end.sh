@@ -14,8 +14,10 @@ DATA_DIR="$PROJECT_ROOT/data"
 INPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/input"
 
 # Remove re-created directories before running
-rm -rf "$PROJECT_ROOT/spark-warehouse"
+rm -rf "$PROJECT_ROOT/spark-warehouse/*"
 
 ./get_data.sh "$CRAWL"
 ./run_wat_to_link.sh "$CRAWL"
 ./run_link_to_graph.sh "$CRAWL"
+
+echo "Preprocessing graphs..."
