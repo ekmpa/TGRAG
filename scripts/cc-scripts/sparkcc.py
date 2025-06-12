@@ -16,24 +16,23 @@ from pyspark.sql.types import LongType, StringType, StructField, StructType
 from warcio.archiveiterator import ArchiveIterator
 from warcio.recordloader import ArchiveLoadFailed, ArcWarcRecord
 
-LOGGING_FORMAT = "%(asctime)s %(levelname)s %(name)s: %(message)s"
+LOGGING_FORMAT = '%(asctime)s %(levelname)s %(name)s: %(message)s'
 
 
 class CCSparkJob(object):
-    """
-    A simple Spark job definition to process Common Crawl data
+    """A simple Spark job definition to process Common Crawl data
     (WARC/WAT/WET files using Spark and warcio)
     """
 
-    name = "CCSparkJob"
+    name = 'CCSparkJob'
 
     output_schema = StructType(
-        [StructField("key", StringType(), True), StructField("val", LongType(), True)]
+        [StructField('key', StringType(), True), StructField('val', LongType(), True)]
     )
 
     # description of input and output shown by --help
-    input_descr = "Path to file listing input paths"
-    output_descr = "Name of output table (saved in spark.sql.warehouse.dir)"
+    input_descr = 'Path to file listing input paths'
+    output_descr = 'Name of output table (saved in spark.sql.warehouse.dir)'
 
     # parse HTTP headers of WARC records (derived classes may override this)
     warc_parse_http_header = True
@@ -42,7 +41,7 @@ class CCSparkJob(object):
     records_processed = None
     warc_input_processed = None
     warc_input_failed = None
-    log_level = "INFO"
+    log_level = 'INFO'
     logging.basicConfig(level=log_level, format=LOGGING_FORMAT)
 
     num_input_partitions = 400
@@ -53,87 +52,86 @@ class CCSparkJob(object):
     s3client = None
 
     # pattern to split a data URL (<scheme>://<netloc>/<path> or <scheme>:/<path>)
-    data_url_pattern = re.compile("^(s3|https?|file|hdfs):(?://([^/]*))?/(.*)")
+    data_url_pattern = re.compile('^(s3|https?|file|hdfs):(?://([^/]*))?/(.*)')
 
     def parse_arguments(self):
         """Returns the parsed arguments from the command line"""
-
         description = self.name
         if self.__doc__ is not None:
-            description += " - "
+            description += ' - '
             description += self.__doc__
         arg_parser = argparse.ArgumentParser(
-            prog=self.name, description=description, conflict_handler="resolve"
+            prog=self.name, description=description, conflict_handler='resolve'
         )
 
-        arg_parser.add_argument("input", help=self.input_descr)
-        arg_parser.add_argument("output", help=self.output_descr)
+        arg_parser.add_argument('input', help=self.input_descr)
+        arg_parser.add_argument('output', help=self.output_descr)
         arg_parser.add_argument(
-            "--input_base_url",
-            help="Base URL (prefix) used if paths to WARC/WAT/WET "
-            "files are relative paths. Used to select the "
-            "access method: s3://commoncrawl/ (authenticated "
-            "S3) or https://data.commoncrawl.org/ (HTTP)",
+            '--input_base_url',
+            help='Base URL (prefix) used if paths to WARC/WAT/WET '
+            'files are relative paths. Used to select the '
+            'access method: s3://commoncrawl/ (authenticated '
+            'S3) or https://data.commoncrawl.org/ (HTTP)',
         )
         arg_parser.add_argument(
-            "--num_input_partitions",
+            '--num_input_partitions',
             type=int,
             default=self.num_input_partitions,
-            help="Number of input splits/partitions, "
-            "number of parallel tasks to process WARC "
-            "files/records",
+            help='Number of input splits/partitions, '
+            'number of parallel tasks to process WARC '
+            'files/records',
         )
         arg_parser.add_argument(
-            "--num_output_partitions",
+            '--num_output_partitions',
             type=int,
             default=self.num_output_partitions,
-            help="Number of output partitions",
+            help='Number of output partitions',
         )
         arg_parser.add_argument(
-            "--output_format",
-            default="parquet",
-            help="Output format: parquet (default)," " orc, json, csv",
+            '--output_format',
+            default='parquet',
+            help='Output format: parquet (default),' ' orc, json, csv',
         )
         arg_parser.add_argument(
-            "--output_compression",
-            default="gzip",
-            help="Output compression codec: None,"
-            " gzip/zlib (default), zstd, snappy, lzo, etc.",
+            '--output_compression',
+            default='gzip',
+            help='Output compression codec: None,'
+            ' gzip/zlib (default), zstd, snappy, lzo, etc.',
         )
         arg_parser.add_argument(
-            "--output_option",
-            action="append",
+            '--output_option',
+            action='append',
             default=[],
-            help="Additional output option pair"
-            " to set (format-specific) output options, e.g.,"
-            " `header=true` to add a header line to CSV files."
-            " Option name and value are split at `=` and"
-            " multiple options can be set by passing"
-            " `--output_option <name>=<value>` multiple times",
+            help='Additional output option pair'
+            ' to set (format-specific) output options, e.g.,'
+            ' `header=true` to add a header line to CSV files.'
+            ' Option name and value are split at `=` and'
+            ' multiple options can be set by passing'
+            ' `--output_option <name>=<value>` multiple times',
         )
 
         arg_parser.add_argument(
-            "--local_temp_dir",
+            '--local_temp_dir',
             default=None,
-            help="Local temporary directory, used to" " buffer content from S3",
+            help='Local temporary directory, used to' ' buffer content from S3',
         )
 
         arg_parser.add_argument(
-            "--log_level", default=self.log_level, help="Logging level"
+            '--log_level', default=self.log_level, help='Logging level'
         )
         arg_parser.add_argument(
-            "--spark-profiler",
-            action="store_true",
-            help="Enable PySpark profiler and log"
-            " profiling metrics if job has finished,"
-            " cf. spark.python.profile",
+            '--spark-profiler',
+            action='store_true',
+            help='Enable PySpark profiler and log'
+            ' profiling metrics if job has finished,'
+            ' cf. spark.python.profile',
         )
 
         self.add_arguments(arg_parser)
         args = arg_parser.parse_args()
         self.init_logging(args.log_level)
         if not self.validate_arguments(args):
-            raise Exception("Arguments not valid")
+            raise Exception('Arguments not valid')
 
         return args
 
@@ -141,21 +139,22 @@ class CCSparkJob(object):
         """Allows derived classes to add command-line arguments.
         Derived classes overriding this method must call
         super().add_arguments(parser) in order to add "register"
-        arguments from all classes in the hierarchy."""
-        pass
+        arguments from all classes in the hierarchy.
+        """
 
     def validate_arguments(self, args):
         """Validate arguments. Derived classes overriding this method
-        must call super().validate_arguments(args)."""
-        if "orc" == args.output_format and "gzip" == args.output_compression:
+        must call super().validate_arguments(args).
+        """
+        if 'orc' == args.output_format and 'gzip' == args.output_compression:
             # gzip for Parquet, zlib for ORC
-            args.output_compression = "zlib"
+            args.output_compression = 'zlib'
         return True
 
     def get_output_options(self):
         """Convert output options strings (opt=val) to kwargs"""
         return {
-            x[0]: x[1] for x in map(lambda x: x.split("=", 1), self.args.output_option)
+            x[0]: x[1] for x in map(lambda x: x.split('=', 1), self.args.output_option)
         }
 
     def init_logging(self, level=None, session=None):
@@ -172,7 +171,8 @@ class CCSparkJob(object):
         """Register and initialize counters (aka. accumulators).
         Derived classes may use this method to add their own
         accumulators but must call super().init_accumulators(session)
-        to also initialize counters from base classes."""
+        to also initialize counters from base classes.
+        """
         sc = session.sparkContext
         self.records_processed = sc.accumulator(0)
         self.warc_input_processed = sc.accumulator(0)
@@ -196,7 +196,7 @@ class CCSparkJob(object):
         builder = SparkSession.builder.appName(self.name)
 
         if self.args.spark_profiler:
-            builder.config("spark.python.profile", "true")
+            builder.config('spark.python.profile', 'true')
 
         session = builder.getOrCreate()
 
@@ -219,13 +219,13 @@ class CCSparkJob(object):
         self.log_accumulator(
             session,
             self.warc_input_processed,
-            "WARC/WAT/WET input files processed = {}",
+            'WARC/WAT/WET input files processed = {}',
         )
         self.log_accumulator(
-            session, self.warc_input_failed, "WARC/WAT/WET input files failed = {}"
+            session, self.warc_input_failed, 'WARC/WAT/WET input files failed = {}'
         )
         self.log_accumulator(
-            session, self.records_processed, "WARC/WAT/WET records processed = {}"
+            session, self.records_processed, 'WARC/WAT/WET records processed = {}'
         )
 
     @staticmethod
@@ -244,23 +244,18 @@ class CCSparkJob(object):
         session.createDataFrame(output, schema=self.output_schema).coalesce(
             self.args.num_output_partitions
         ).write.format(self.args.output_format).option(
-            "compression", self.args.output_compression
-        ).options(
-            **self.get_output_options()
-        ).saveAsTable(
-            self.args.output
-        )
+            'compression', self.args.output_compression
+        ).options(**self.get_output_options()).saveAsTable(self.args.output)
 
         self.log_accumulators(session)
 
     def get_s3_client(self):
         if not self.s3client:
-            self.s3client = boto3.client("s3", use_ssl=False)
+            self.s3client = boto3.client('s3', use_ssl=False)
         return self.s3client
 
     def fetch_warc(self, uri, base_uri=None, offset=-1, length=-1):
         """Fetch WARC/WAT/WET files (or a record if offset and length are given)"""
-
         (scheme, netloc, path) = (None, None, None)
         uri_match = self.data_url_pattern.match(uri)
         if not uri_match and base_uri:
@@ -276,94 +271,94 @@ class CCSparkJob(object):
 
         stream = None
 
-        if scheme == "s3":
+        if scheme == 's3':
             bucketname = netloc
             if not bucketname:
-                self.get_logger().error("Invalid S3 URI: " + uri)
+                self.get_logger().error('Invalid S3 URI: ' + uri)
                 return
             if not path:
-                self.get_logger().error("Empty S3 path: " + uri)
+                self.get_logger().error('Empty S3 path: ' + uri)
                 return
-            elif path[0] == "/":
+            elif path[0] == '/':
                 # must strip leading / in S3 path
                 path = path[1:]
             if offset > -1 and length > 0:
-                rangereq = "bytes={}-{}".format(offset, (offset + length - 1))
+                rangereq = 'bytes={}-{}'.format(offset, (offset + length - 1))
                 # Note: avoid logging too many small fetches
                 # self.get_logger().debug('Fetching {} ({})'.format(uri, rangereq))
                 try:
                     response = self.get_s3_client().get_object(
                         Bucket=bucketname, Key=path, Range=rangereq
                     )
-                    stream = BytesIO(response["Body"].read())
+                    stream = BytesIO(response['Body'].read())
                 except botocore.client.ClientError as exception:
                     self.get_logger().error(
-                        "Failed to download: s3://{}/{} (offset: {}, length: {}) - {}".format(
+                        'Failed to download: s3://{}/{} (offset: {}, length: {}) - {}'.format(
                             bucketname, path, offset, length, exception
                         )
                     )
                     self.warc_input_failed.add(1)
                     return
             else:
-                self.get_logger().info("Reading from S3 {}".format(uri))
+                self.get_logger().info('Reading from S3 {}'.format(uri))
                 # download entire file using a temporary file for buffering
-                warctemp = TemporaryFile(mode="w+b", dir=self.args.local_temp_dir)
+                warctemp = TemporaryFile(mode='w+b', dir=self.args.local_temp_dir)
                 try:
                     self.get_s3_client().download_fileobj(bucketname, path, warctemp)
                     warctemp.seek(0)
                     stream = warctemp
                 except botocore.client.ClientError as exception:
                     self.get_logger().error(
-                        "Failed to download {}: {}".format(uri, exception)
+                        'Failed to download {}: {}'.format(uri, exception)
                     )
                     self.warc_input_failed.add(1)
                     warctemp.close()
 
-        elif scheme == "http" or scheme == "https":
+        elif scheme == 'http' or scheme == 'https':
             headers = None
             if offset > -1 and length > 0:
-                headers = {"Range": "bytes={}-{}".format(offset, (offset + length - 1))}
+                headers = {'Range': 'bytes={}-{}'.format(offset, (offset + length - 1))}
                 # Note: avoid logging many small fetches
                 # self.get_logger().debug('Fetching {} ({})'.format(uri, headers))
             else:
-                self.get_logger().info("Fetching {}".format(uri))
+                self.get_logger().info('Fetching {}'.format(uri))
             response = requests.get(uri, headers=headers)
 
             if response.ok:
                 # includes "HTTP 206 Partial Content" for range requests
                 warctemp = SpooledTemporaryFile(
-                    max_size=2097152, mode="w+b", dir=self.args.local_temp_dir
+                    max_size=2097152, mode='w+b', dir=self.args.local_temp_dir
                 )
                 warctemp.write(response.content)
                 warctemp.seek(0)
                 stream = warctemp
             else:
                 self.get_logger().error(
-                    "Failed to download {}: {}".format(uri, response.status_code)
+                    'Failed to download {}: {}'.format(uri, response.status_code)
                 )
 
-        elif scheme == "hdfs":
+        elif scheme == 'hdfs':
             try:
                 import pydoop.hdfs as hdfs
 
-                self.get_logger().error("Reading from HDFS {}".format(uri))
+                self.get_logger().error('Reading from HDFS {}'.format(uri))
                 stream = hdfs.open(uri)
             except RuntimeError as exception:
-                self.get_logger().error("Failed to open {}: {}".format(uri, exception))
+                self.get_logger().error('Failed to open {}: {}'.format(uri, exception))
                 self.warc_input_failed.add(1)
 
         else:
-            self.get_logger().info("Reading local file {}".format(uri))
-            if scheme == "file":
+            self.get_logger().info('Reading local file {}'.format(uri))
+            if scheme == 'file':
                 # must be an absolute path
-                uri = os.path.join("/", path)
+                uri = os.path.join('/', path)
             else:
                 base_dir = os.path.abspath(os.path.dirname(__file__))
                 uri = os.path.join(base_dir, uri)
             try:
-                stream = open(uri, "rb")
+                stream = open(uri, 'rb')
             except IOError as exception:
-                self.get_logger().error("Failed to open {}: {}".format(uri, exception))
+                self.get_logger().error('Failed to open {}: {}'.format(uri, exception))
                 self.warc_input_failed.add(1)
 
         return stream
@@ -384,7 +379,8 @@ class CCSparkJob(object):
 
     def process_warc(self, uri, stream):
         """Parse a WARC (or WAT/WET file) using warcio,
-        call iterate_records() to process the WARC records"""
+        call iterate_records() to process the WARC records
+        """
         try:
             rec_iter = ArchiveIterator(
                 stream, no_record_parse=(not self.warc_parse_http_header), arc2warc=True
@@ -393,16 +389,17 @@ class CCSparkJob(object):
                 yield res
         except ArchiveLoadFailed as exception:
             self.warc_input_failed.add(1)
-            self.get_logger().error("Invalid WARC: {} - {}".format(uri, exception))
+            self.get_logger().error('Invalid WARC: {} - {}'.format(uri, exception))
 
     def process_record(self, record):
         """Process a single WARC/WAT/WET record"""
-        raise NotImplementedError("Processing record needs to be customized")
+        raise NotImplementedError('Processing record needs to be customized')
 
     def iterate_records(self, _warc_uri, archive_iterator):
         """Iterate over all WARC records. This method can be customized
         and allows to access also values from ArchiveIterator, namely
-        WARC record offset and length."""
+        WARC record offset and length.
+        """
         for record in archive_iterator:
             for res in self.process_record(record):
                 yield res
@@ -428,29 +425,29 @@ class CCSparkJob(object):
     @staticmethod
     def is_response_record(record: ArcWarcRecord):
         """Return true if WARC record is a WARC response record"""
-        return record.rec_type == "response"
+        return record.rec_type == 'response'
 
     @staticmethod
     def is_wet_text_record(record: ArcWarcRecord):
         """Return true if WARC record is a WET text/plain record"""
-        return record.rec_type == "conversion" and record.content_type == "text/plain"
+        return record.rec_type == 'conversion' and record.content_type == 'text/plain'
 
     @staticmethod
     def is_wat_json_record(record: ArcWarcRecord):
         """Return true if WARC record is a WAT record"""
         return (
-            record.rec_type == "metadata" and record.content_type == "application/json"
+            record.rec_type == 'metadata' and record.content_type == 'application/json'
         )
 
     @staticmethod
     def is_html(record: ArcWarcRecord):
         """Return true if (detected) MIME type of a record is HTML"""
-        html_types = ["text/html", "application/xhtml+xml"]
-        if ("WARC-Identified-Payload-Type" in record.rec_headers) and (
-            record.rec_headers["WARC-Identified-Payload-Type"] in html_types
+        html_types = ['text/html', 'application/xhtml+xml']
+        if ('WARC-Identified-Payload-Type' in record.rec_headers) and (
+            record.rec_headers['WARC-Identified-Payload-Type'] in html_types
         ):
             return True
-        content_type = record.http_headers.get_header("content-type", None)
+        content_type = record.http_headers.get_header('content-type', None)
         if content_type:
             for html_type in html_types:
                 if html_type in content_type:
@@ -459,52 +456,50 @@ class CCSparkJob(object):
 
 
 class CCIndexSparkJob(CCSparkJob):
-    """
-    Process the Common Crawl columnar URL index
-    """
+    """Process the Common Crawl columnar URL index"""
 
-    name = "CCIndexSparkJob"
+    name = 'CCIndexSparkJob'
 
     # description of input and output shown in --help
-    input_descr = "Path to Common Crawl index table"
+    input_descr = 'Path to Common Crawl index table'
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--table",
-            default="ccindex",
-            help="name of the table data is loaded into" " (default: ccindex)",
+            '--table',
+            default='ccindex',
+            help='name of the table data is loaded into' ' (default: ccindex)',
         )
         parser.add_argument(
-            "--query",
+            '--query',
             default=None,
             required=True,
-            help="SQL query to select rows (required).",
+            help='SQL query to select rows (required).',
         )
         parser.add_argument(
-            "--table_schema",
+            '--table_schema',
             default=None,
-            help="JSON schema of the ccindex table,"
-            " implied from Parquet files if not provided.",
+            help='JSON schema of the ccindex table,'
+            ' implied from Parquet files if not provided.',
         )
 
     def load_table(self, session, table_path, table_name):
-        parquet_reader = session.read.format("parquet")
+        parquet_reader = session.read.format('parquet')
         if self.args.table_schema is not None:
             self.get_logger(session).info(
-                "Reading table schema from {}".format(self.args.table_schema)
+                'Reading table schema from {}'.format(self.args.table_schema)
             )
-            with open(self.args.table_schema, "r") as s:
+            with open(self.args.table_schema, 'r') as s:
                 schema = StructType.fromJson(json.loads(s.read()))
             parquet_reader = parquet_reader.schema(schema)
         df = parquet_reader.load(table_path)
         df.createOrReplaceTempView(table_name)
         self.get_logger(session).info(
-            "Schema of table {}:\n{}".format(table_name, df.schema)
+            'Schema of table {}:\n{}'.format(table_name, df.schema)
         )
 
     def execute_query(self, session, query):
         sqldf = session.sql(query)
-        self.get_logger(session).info("Executing query: {}".format(query))
+        self.get_logger(session).info('Executing query: {}'.format(query))
         sqldf.explain()
         return sqldf
 
@@ -515,12 +510,12 @@ class CCIndexSparkJob(CCSparkJob):
 
         num_rows = sqldf.count()
         self.get_logger(session).info(
-            "Number of records/rows matched by query: {}".format(num_rows)
+            'Number of records/rows matched by query: {}'.format(num_rows)
         )
 
         if partitions > 0:
             self.get_logger(session).info(
-                "Repartitioning data to {} partitions".format(partitions)
+                'Repartitioning data to {} partitions'.format(partitions)
             )
             sqldf = sqldf.repartition(partitions)
             sqldf.persist()
@@ -531,76 +526,74 @@ class CCIndexSparkJob(CCSparkJob):
         sqldf = self.load_dataframe(session, self.args.num_output_partitions)
 
         sqldf.write.format(self.args.output_format).option(
-            "compression", self.args.output_compression
+            'compression', self.args.output_compression
         ).options(**self.get_output_options()).saveAsTable(self.args.output)
 
         self.log_accumulators(session)
 
 
 class CCIndexWarcSparkJob(CCIndexSparkJob):
-    """
-    Process Common Crawl data (WARC records) found by the columnar URL index
-    """
+    """Process Common Crawl data (WARC records) found by the columnar URL index"""
 
-    name = "CCIndexWarcSparkJob"
+    name = 'CCIndexWarcSparkJob'
 
     input_descr = (
-        "Path to Common Crawl index table (with option `--query`)"
-        " or extracted table containing WARC record coordinates"
+        'Path to Common Crawl index table (with option `--query`)'
+        ' or extracted table containing WARC record coordinates'
     )
 
     def add_arguments(self, parser):
         super(CCIndexWarcSparkJob, self).add_arguments(parser)
         agroup = parser.add_mutually_exclusive_group(required=True)
         agroup.add_argument(
-            "--query",
+            '--query',
             default=None,
-            help="SQL query to select rows. Note: the result "
+            help='SQL query to select rows. Note: the result '
             "is required to contain the columns `url', `warc"
             "_filename', `warc_record_offset' and `warc_record"
             "_length', make sure they're SELECTed. The column "
             "`content_charset' is optional and is utilized to "
-            "read WARC record payloads with the right encoding.",
+            'read WARC record payloads with the right encoding.',
         )
         agroup.add_argument(
-            "--csv",
+            '--csv',
             default=None,
-            help="CSV file to load WARC records by filename, "
-            "offset and length. The CSV file must have column "
+            help='CSV file to load WARC records by filename, '
+            'offset and length. The CSV file must have column '
             "headers and the input columns `url', "
             "`warc_filename', `warc_record_offset' and "
             "`warc_record_length' are mandatory, see also "
-            "option --query.\nDeprecated, use instead "
-            "`--input_table_format csv` together with "
-            "`--input_table_option header=True` and "
-            "`--input_table_option inferSchema=True`.",
+            'option --query.\nDeprecated, use instead '
+            '`--input_table_format csv` together with '
+            '`--input_table_option header=True` and '
+            '`--input_table_option inferSchema=True`.',
         )
         agroup.add_argument(
-            "--input_table_format",
+            '--input_table_format',
             default=None,
-            help="Data format of the input table to load WARC "
-            "records by filename, offset and length. The input "
-            "table is read from the path <input> and is expected "
+            help='Data format of the input table to load WARC '
+            'records by filename, offset and length. The input '
+            'table is read from the path <input> and is expected '
             "to include the columns `url', `warc_filename', "
             "`warc_record_offset' and `warc_record_length'. The "
-            "input table is typically a result of a CTAS query "
-            "(create table as).  Allowed formats are: orc, "
-            "json lines, csv, parquet and other formats "
-            "supported by Spark.",
+            'input table is typically a result of a CTAS query '
+            '(create table as).  Allowed formats are: orc, '
+            'json lines, csv, parquet and other formats '
+            'supported by Spark.',
         )
         parser.add_argument(
-            "--input_table_option",
-            action="append",
+            '--input_table_option',
+            action='append',
             default=[],
-            help="Additional input option when reading data from "
-            "an input table (see `--input_table_format`). Options "
-            "are passed to the Spark DataFrameReader.",
+            help='Additional input option when reading data from '
+            'an input table (see `--input_table_format`). Options '
+            'are passed to the Spark DataFrameReader.',
         )
 
     def get_input_table_options(self):
         return {
             x[0]: x[1]
-            for x in map(lambda x: x.split("=", 1), self.args.input_table_option)
+            for x in map(lambda x: x.split('=', 1), self.args.input_table_option)
         }
 
     def load_dataframe(self, session, partitions=-1):
@@ -609,9 +602,9 @@ class CCIndexWarcSparkJob(CCIndexSparkJob):
 
         if self.args.csv is not None:
             sqldf = (
-                session.read.format("csv")
-                .option("header", True)
-                .option("inferSchema", True)
+                session.read.format('csv')
+                .option('header', True)
+                .option('inferSchema', True)
                 .load(self.args.csv)
             )
         elif self.args.input_table_format is not None:
@@ -622,7 +615,7 @@ class CCIndexWarcSparkJob(CCIndexSparkJob):
 
         if partitions > 0:
             self.get_logger(session).info(
-                "Repartitioning data to {} partitions".format(partitions)
+                'Repartitioning data to {} partitions'.format(partitions)
             )
             sqldf = sqldf.repartition(partitions)
 
@@ -632,26 +625,26 @@ class CCIndexWarcSparkJob(CCIndexSparkJob):
 
     def process_record_with_row(self, record, row):
         """Process a single WARC record and the corresponding table row."""
-        if "content_charset" in row:
+        if 'content_charset' in row:
             # pass `content_charset` forward to subclass processing WARC records
-            record.rec_headers["WARC-Identified-Content-Charset"] = row[
-                "content_charset"
+            record.rec_headers['WARC-Identified-Content-Charset'] = row[
+                'content_charset'
             ]
         for res in self.process_record(record):
             yield res
 
     def fetch_process_warc_records(self, rows):
         """Fetch and process WARC records specified by columns warc_filename,
-        warc_record_offset and warc_record_length in rows"""
-
+        warc_record_offset and warc_record_length in rows
+        """
         no_parse = not self.warc_parse_http_header
 
         for row in rows:
-            url = row["url"]
-            warc_path = row["warc_filename"]
-            offset = int(row["warc_record_offset"])
-            length = int(row["warc_record_length"])
-            self.get_logger().debug("Fetching WARC record for {}".format(url))
+            url = row['url']
+            warc_path = row['warc_filename']
+            offset = int(row['warc_record_offset'])
+            length = int(row['warc_record_length'])
+            self.get_logger().debug('Fetching WARC record for {}'.format(url))
             record_stream = self.fetch_warc(
                 warc_path, self.args.input_base_url, offset, length
             )
@@ -663,7 +656,7 @@ class CCIndexWarcSparkJob(CCIndexSparkJob):
             except ArchiveLoadFailed as exception:
                 self.warc_input_failed.add(1)
                 self.get_logger().error(
-                    "Invalid WARC record: {} ({}, offset: {}, length: {}) - {}".format(
+                    'Invalid WARC record: {} ({}, offset: {}, length: {}) - {}'.format(
                         url, warc_path, offset, length, exception
                     )
                 )
@@ -671,9 +664,9 @@ class CCIndexWarcSparkJob(CCIndexSparkJob):
     def run_job(self, session):
         sqldf = self.load_dataframe(session, self.args.num_input_partitions)
 
-        columns = ["url", "warc_filename", "warc_record_offset", "warc_record_length"]
-        if "content_charset" in sqldf.columns:
-            columns.append("content_charset")
+        columns = ['url', 'warc_filename', 'warc_record_offset', 'warc_record_length']
+        if 'content_charset' in sqldf.columns:
+            columns.append('content_charset')
         warc_recs = sqldf.select(*columns).rdd
 
         output = warc_recs.mapPartitions(self.fetch_process_warc_records).reduceByKey(
@@ -683,11 +676,7 @@ class CCIndexWarcSparkJob(CCIndexSparkJob):
         session.createDataFrame(output, schema=self.output_schema).coalesce(
             self.args.num_output_partitions
         ).write.format(self.args.output_format).option(
-            "compression", self.args.output_compression
-        ).options(
-            **self.get_output_options()
-        ).saveAsTable(
-            self.args.output
-        )
+            'compression', self.args.output_compression
+        ).options(**self.get_output_options()).saveAsTable(self.args.output)
 
         self.log_accumulators(session)
