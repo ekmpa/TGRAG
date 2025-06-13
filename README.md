@@ -20,10 +20,10 @@ brew install uv
 
 ```sh
 # Clone the repo
-git clone git@github.com:ekmpa/TGRAG.git
+git@github.com:ekmpa/CrediGraph.git
 
 # Enter the repo directory
-cd TGRAG
+cd CrediGraph
 
 # Install core dependencies into an isolated environment
 uv sync
