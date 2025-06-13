@@ -19,5 +19,3 @@ rm -rf "$PROJECT_ROOT/spark-warehouse/*"
 ./get_data.sh "$CRAWL"
 ./run_wat_to_link.sh "$CRAWL"
 ./run_link_to_graph.sh "$CRAWL"
-
-echo "Preprocessing graphs..."
