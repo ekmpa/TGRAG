@@ -4,6 +4,24 @@ import shutil
 import subprocess
 
 
+#export SPARK_HOME=/opt/homebrew/Cellar/apache-spark/3.5.5/libexec
+#export PATH=$SPARK_HOME/bin:$PATH
+
+#export JAVA_HOME="/opt/homebrew/opt/openjdk@11"
+#export PATH="$JAVA_HOME/bin:$PATH"
+
+# curl -O https://data.commoncrawl.org/crawl-data/CC-MAIN-2024-10/wat.paths.gz
+
+# rm -rf spark-warehouse/*         before running 
+
+# printf "file://%s/%s\n" "$PWD" CC-MAIN-20250512011722-20250512041722-*.warc.wat.gz > input_paths.txt
+# printf "file://%s/%s\n" "$PWD" CC-MAIN-*.warc.wat.gz > input_paths.txt
+
+# export CURRENT_SLICE=$(echo ${CC-MAIN-2024-10} | tr '-' '_') 
+
+# list available: 
+# curl -s https://index.commoncrawl.org/collinfo.json | jq '.[].id'
+
 def run_spark_wat_extraction(
     input_file: str,
     output_table: str,

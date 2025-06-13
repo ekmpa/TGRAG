@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: ./download_slice.sh CC-MAIN-YYYY-NN [NUM_FILES]
+# Usage: ./load_pipeline.sh CC-MAIN-YYYY-NN [NUM_FILES]
 
 # For cluster usage
 #module load python/3.8
