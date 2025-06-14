@@ -1,6 +1,7 @@
 #Ours
 data/
 saved_graphs/
+spark-warehouse/
 #External repos
 external/cc-pyspark/
 external/cc-webgraph/
