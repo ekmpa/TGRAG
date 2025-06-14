@@ -16,7 +16,6 @@ CRAWL="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 DATA_DIR="$PROJECT_ROOT/data"
-INPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/input"
 
 VENV_PATH="$PROJECT_ROOT/.venv"
 

@@ -30,6 +30,7 @@ def extract_graph_domains(filepath: str, use_core: bool = False) -> pd.DataFrame
             if not line:
                 continue
 
+            # TODO: There is a glaring error here,you are matching by name which is not correct. (e.g reuters.com != www.reuterscompany.com)
             domain_part = line.split('\t', 1)[-1]
             ext = tldextract.extract(domain_part)
 
@@ -67,7 +68,6 @@ def get_credibility_intersection(source_path: str) -> None:
 
     common = graph_domains_set.intersection(cred_labels_set)
     print(f'Number of common domains: {len(common)}')
-    # print("Example matches:", list(common)[:10])
 
     # Node annotation stats
     annotated_nodes = len(enriched_df)
