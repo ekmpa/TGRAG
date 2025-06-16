@@ -5,13 +5,12 @@ description = "Temporal Graph Analysis on Web-Data"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-{name = "Sebastian Sabry", email = "sebastian.sabry@mail.mcgill.ca"}
+{name = "Sebastian Sabry", email = "sebastian.sabry@mail.mcgill.ca"},
+{name = "Emma Kondrup", email = "emma.kondrup@mail.mcgill.ca"}
 ]
 dependencies = [
     "boto3>=1.38.33",
     "idna>=3.10",
-    "neo4j-viz>=0.2.6",
-    "networkx>=3.2.1",
     "orjson>=3.10.18",
     "pyspark>=4.0.0",
     "requests>=2.32.3",
@@ -45,6 +44,7 @@ analytics = [
 ]
 
 [tool.mypy]
+files = ["tgrag"]
 install_types = true
 non_interactive = true
 ignore_missing_imports = true
