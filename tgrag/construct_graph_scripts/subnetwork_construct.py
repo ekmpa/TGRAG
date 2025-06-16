@@ -1,4 +1,4 @@
-import os
+import pathlib
 import re
 
 import pandas as pd
@@ -18,16 +18,23 @@ def contains_base_domain(input: str, base_domain: str) -> bool:
     return re.search(combined_pat, input) is not None
 
 
+import pathlib
+
+import pandas as pd
+from tqdm import tqdm
+
+
 def construct_subnetwork(
     dqr_path: str,
     output_path: str,
     temporal_edges: pd.DataFrame,
     temporal_vertices: pd.DataFrame,
+    n_hop: int = 1,
 ) -> None:
     df_dqr = pd.read_csv(dqr_path)
 
-    for base_domain, pc1 in tqdm(
-        zip(df_dqr['domain'], df_dqr['pc1']), desc='Domain pc1 data'
+    for base_domain, _ in tqdm(
+        zip(df_dqr['domain'], df_dqr['pc1']), desc='Labelled Domain'
     ):
         matched_vertices = temporal_vertices[
             temporal_vertices['domain'].apply(
@@ -38,34 +45,39 @@ def construct_subnetwork(
         if matched_vertices.empty:
             continue
 
-        matched_node_ids = set(matched_vertices['node_id'])
+        seen_node_ids = set(matched_vertices['node_id'])
+        current_frontier = set(seen_node_ids)
+        all_edges = pd.DataFrame(columns=temporal_edges.columns)
 
-        matched_edges = temporal_edges[
-            temporal_edges['src'].isin(matched_node_ids)
-            | temporal_edges['dst'].isin(matched_node_ids)
+        for _ in range(n_hop + 1):
+            if not current_frontier:
+                break
+
+            hop_edges = temporal_edges[
+                temporal_edges['src'].isin(current_frontier)
+                | temporal_edges['dst'].isin(current_frontier)
+            ]
+
+            all_edges = pd.concat([all_edges, hop_edges], ignore_index=True)
+
+            hop_node_ids = set(hop_edges['src']).union(set(hop_edges['dst']))
+
+            next_frontier = hop_node_ids - seen_node_ids
+
+            seen_node_ids.update(next_frontier)
+            current_frontier = next_frontier
+
+        sub_vertices_df = temporal_vertices[
+            temporal_vertices['node_id'].isin(seen_node_ids)
         ]
+        sub_edges_df = all_edges.drop_duplicates(subset=['src', 'dst'])
 
-        sub_vertices_df = matched_vertices.copy()
-        sub_edges_df = matched_edges.copy()
+        safe_domain = base_domain.replace('.', '_')
+        sub_path = pathlib.Path(output_path) / f'sub_vertices_domain_{safe_domain}'
+        sub_path.mkdir(parents=True, exist_ok=True)
 
-        dst_edge_node_ids = set()
-        for _, row in matched_edges.iterrows():
-            if row['src'] in matched_node_ids and row['dst'] not in matched_node_ids:
-                dst_edge_node_ids.add(row['dst'])
-            elif row['dst'] in matched_node_ids and row['src'] not in matched_node_ids:
-                dst_edge_node_ids.add(row['src'])
-
-        additional_vertices = temporal_vertices[
-            temporal_vertices['node_id'].isin(dst_edge_node_ids)
-        ]
-
-        sub_vertices_df = pd.concat(
-            [sub_vertices_df, additional_vertices], ignore_index=True
-        )
-        sub_path = f'{output_path}/sub_vertices_domain_{base_domain}'
-        os.makedirs(sub_path, exist_ok=True)
-        sub_vertices_df.to_csv(f'{sub_path}/vertices.csv', index=False)
-        sub_edges_df.to_csv(f'{sub_path}/edges.csv', index=False)
+        sub_vertices_df.to_csv(sub_path / 'vertices.csv', index=False)
+        sub_edges_df.to_csv(sub_path / 'edges.csv', index=False)
 
 
 def main() -> None:
@@ -73,7 +85,7 @@ def main() -> None:
     dqr_path = f'{base_path}/data/dqr/domain_pc1.csv'
     temporal_path = f'{base_path}/data/crawl-data/temporal'
     output_path = f'{base_path}/data/crawl-data/sub-networks/'
-    os.makedirs(output_path, exist_ok=True)
+    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
     temporal_edges_df = pd.read_csv(f'{temporal_path}/temporal_edges.csv')
     temporal_vertices_df = pd.read_csv(f'{temporal_path}/temporal_nodes.csv')
     construct_subnetwork(dqr_path, output_path, temporal_edges_df, temporal_vertices_df)
