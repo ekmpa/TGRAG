@@ -28,25 +28,18 @@ class TemporalGraphMerger:
 
     def _load_existing(self) -> None:
         """Reconstruct graph from existing CSVs."""
-        edges_path = os.path.join(self.output_dir, 'temporal_edges.csv')
+        next_edges_path = os.path.join(self.output_dir, 'temporal_edges.csv')
         nodes_path = os.path.join(self.output_dir, 'temporal_nodes.csv')
 
-        if os.path.exists(edges_path) and os.path.exists(nodes_path):
+        if os.path.exists(next_edges_path) and os.path.exists(nodes_path):
             try:
-                df_edges = pd.read_csv(edges_path)
+                df_edges = pd.read_csv(next_edges_path)
                 df_nodes = pd.read_csv(nodes_path)
                 self.edges = list(df_edges.itertuples(index=False, name=None))
                 self.domain_to_node = {
                     row['domain']: (row['node_id'], -1)
                     for _, row in df_nodes.iterrows()
                 }
-                self.next_node_id = (
-                    max(
-                        (node_id for node_id, _ in self.domain_to_node.values()),
-                        default=-1,
-                    )
-                    + 1
-                )
                 self.time_ids_seen = set(df_edges['time_id'])
                 print(
                     f'Loaded existing graph with {len(self.domain_to_node)} nodes and {len(self.edges)} edges'
@@ -70,15 +63,17 @@ class TemporalGraphMerger:
             raw = raw[:-1]
         return raw
 
-    def _load_vertices(self, filepath: str) -> List[str]:
+    def _load_vertices(self, filepath: str) -> Tuple[List[str], List[int]]:
         """Helper to extract and load vertices from vertices.txt.gz."""
         domains = []
+        node_ids = []
         with gzip.open(filepath, 'rt', encoding='utf-8', errors='ignore') as f:
             for line in f:
                 parts = line.strip().split('\t')
                 norm = self._normalize_domain(parts[1])
                 domains.append(norm)
-        return domains
+                node_ids.append(int(parts[0]))
+        return domains, node_ids
 
     def _load_edges(self, filepath: str) -> List[Tuple[int, int]]:
         with gzip.open(filepath, 'rt', encoding='utf-8', errors='ignore') as f:
@@ -89,9 +84,9 @@ class TemporalGraphMerger:
                     result.append((int(parts[0]), int(parts[1])))
             return result
 
-    def _slice_to_time_id(self, root_path: str, slice_id: str) -> int:
+    def _slice_to_time_id(self, next_root_path: str, slice_id: str) -> int:
         """Yield timestamp from slice ID (current logic: YYYYMMDD)."""
-        pattern = os.path.join(root_path, slice_id, 'segments', '*', 'wat')
+        pattern = os.path.join(next_root_path, slice_id, 'segments', '*', 'wat')
         wat_dir = glob(pattern)[0]
         wat_files = sorted(glob(os.path.join(wat_dir, '*.wat.gz')))
         warc_date_re = re.compile(r'WARC-Date:\s*(\d{4})-(\d{2})-(\d{2})')
@@ -113,10 +108,14 @@ class TemporalGraphMerger:
         )
 
     def add_graph(
-        self, root_path: str, vertices_path: str, edges_path: str, slice_id: str
+        self,
+        next_root_path: str,
+        next_vertices_path: str,
+        next_edges_path: str,
+        slice_id: str,
     ) -> None:
         """Add new slice to the existing temporal graph."""
-        time_id = self._slice_to_time_id(root_path, slice_id)
+        time_id = self._slice_to_time_id(next_root_path, slice_id)
         if time_id in self.time_ids_seen:
             print(f'Skipping slice {slice_id}: time_id {time_id} already exists.')
             return
@@ -125,25 +124,17 @@ class TemporalGraphMerger:
         existing_node_ids = set(self.domain_to_node.values())
 
         # load vertices and edges using local -> global mapping
-        domains = self._load_vertices(vertices_path)
-        local_to_global = {}
+        domains, node_ids = self._load_vertices(next_vertices_path)
         new_node_ids = set()
 
         for local_id, domain in enumerate(domains):
             if domain not in self.domain_to_node:
-                self.domain_to_node[domain] = (self.next_node_id, time_id)
-                self.next_node_id += 1
+                new_node_ids.add(node_ids[local_id])
+            self.domain_to_node[domain] = (node_ids[local_id], time_id)
 
-            node_id = self.domain_to_node[domain][0]
-            local_to_global[local_id] = node_id
-            new_node_ids.add(node_id)
-
-        edges = self._load_edges(edges_path)
+        edges = self._load_edges(next_edges_path)
         for src_local, dst_local in edges:
-            src_global = local_to_global.get(src_local)
-            dst_global = local_to_global.get(dst_local)
-            if src_global is not None and dst_global is not None:
-                self.edges.append((src_global, dst_global, time_id))
+            self.edges.append((src_local, dst_local, time_id))
 
         self.slice_node_sets[slice_id] = new_node_ids
         self.time_ids_seen.add(time_id)
