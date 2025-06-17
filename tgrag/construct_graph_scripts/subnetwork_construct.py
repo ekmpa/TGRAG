@@ -4,8 +4,6 @@ import re
 import pandas as pd
 from tqdm import tqdm
 
-from tgrag.utils.path import get_root_dir
-
 
 def contains_base_domain(input: str, base_domain: str) -> bool:
     forward_pat = rf'\b(?:[\w-]+\.)*{re.escape(base_domain)}\b'
@@ -16,12 +14,6 @@ def contains_base_domain(input: str, base_domain: str) -> bool:
     combined_pat = rf'(?:{forward_pat}|{reverse_pat})'
 
     return re.search(combined_pat, input) is not None
-
-
-import pathlib
-
-import pandas as pd
-from tqdm import tqdm
 
 
 def construct_subnetwork(
@@ -78,18 +70,3 @@ def construct_subnetwork(
 
         sub_vertices_df.to_csv(sub_path / 'vertices.csv', index=False)
         sub_edges_df.to_csv(sub_path / 'edges.csv', index=False)
-
-
-def main() -> None:
-    base_path = get_root_dir()
-    dqr_path = f'{base_path}/data/dqr/domain_pc1.csv'
-    temporal_path = f'{base_path}/data/crawl-data/temporal'
-    output_path = f'{base_path}/data/crawl-data/sub-networks/'
-    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
-    temporal_edges_df = pd.read_csv(f'{temporal_path}/temporal_edges.csv')
-    temporal_vertices_df = pd.read_csv(f'{temporal_path}/temporal_nodes.csv')
-    construct_subnetwork(dqr_path, output_path, temporal_edges_df, temporal_vertices_df)
-
-
-if __name__ == '__main__':
-    main()
