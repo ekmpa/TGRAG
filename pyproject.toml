@@ -10,6 +10,7 @@ authors = [
 dependencies = [
     "boto3>=1.38.33",
     "idna>=3.10",
+    "mypy>=1.16.1",
     "neo4j-viz>=0.2.6",
     "networkx>=3.2.1",
     "orjson>=3.10.18",
@@ -33,7 +34,6 @@ dev = [
     "ipykernel>=6.29.5",
     "isort>=6.0.1",
     "matplotlib>=3.9.4",
-    "mypy>=1.16.0",
     "pandas>=2.2.3",
     "pre-commit>=4.2.0",
     "pyqt6>=6.9.0",
@@ -45,6 +45,8 @@ analytics = [
 ]
 
 [tool.mypy]
+files = ['tgrag']
+exclude = '^tgrag/cc-scripts/'
 install_types = true
 non_interactive = true
 ignore_missing_imports = true
@@ -87,6 +89,11 @@ addopts = [
     "--color=yes",
     "-vvv",
 ]
+
+
+[tool.coverage.run]
+source = ["tgrag"]
+
 
 
 [tool.coverage.report]
