@@ -158,6 +158,8 @@ class HostLinksToGraph(CCSparkJob):
 
     def run_job(self, session):
         # read edges  s -> t  (host names)
+        session.sql("DROP TABLE IF EXISTS host_graph_output_vertices")
+        session.sql("DROP TABLE IF EXISTS host_graph_output_edges")
         edges = session.read.load(self.args.input)
 
         if self.args.add_input:
@@ -199,9 +201,5 @@ class HostLinksToGraph(CCSparkJob):
 
 
 if __name__ == '__main__':
-    spark = SparkSession.builder.getOrCreate()
-    spark.sql('DROP TABLE IF EXISTS host_graph_output_vertices')
-    spark.sql('DROP TABLE IF EXISTS host_graph_output_edges')
-    spark.sql('DROP TABLE IF EXISTS host_graph_output')
     job = HostLinksToGraph()
     job.run()

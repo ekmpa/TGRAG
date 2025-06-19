@@ -33,8 +33,13 @@ OUTPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/output_text_dir"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
+echo "Cleaning up:"
+rm -rf "./spark-warehouse/host_graph_output_vertices"
+rm -rf "./spark-warehouse/host_graph_output_edges"
 
-/opt/spark/bin/spark-submit \
+
+
+"$VENV_PATH"/bin/spark-submit \
   --driver-memory 2g \
   --executor-memory 2g \
   --conf spark.sql.shuffle.partitions=4 \
