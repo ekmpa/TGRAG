@@ -62,11 +62,11 @@ def main(slices: List[str], construct_subnetworks: bool) -> None:
 
     dqr_path = f'{base_path}/data/dqr/domain_pc1.csv'
     temporal_path = f'{base_path}/data/crawl-data/temporal'
-    output_path = f'{base_path}/data/crawl-data/sub-networks/'
-    pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
     temporal_edges_df = pd.read_csv(f'{temporal_path}/temporal_edges.csv')
     temporal_vertices_df = pd.read_csv(f'{temporal_path}/temporal_nodes.csv')
     if construct_subnetworks:
+        output_path = f'{base_path}/data/crawl-data/sub-networks/'
+        pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
         construct_subnetwork(
             dqr_path, output_path, temporal_edges_df, temporal_vertices_df
         )
