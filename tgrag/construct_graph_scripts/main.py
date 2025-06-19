@@ -1,6 +1,6 @@
+import argparse
 import os
 import pathlib
-import sys
 from typing import List
 
 import pandas as pd
@@ -14,8 +14,24 @@ from tgrag.construct_graph_scripts.subnetwork_construct import (
 from tgrag.construct_graph_scripts.temporal_merge import TemporalGraphMerger
 from tgrag.utils.path import get_root_dir
 
+parser = argparse.ArgumentParser(
+    description='Construct Temporal Dataset.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+)
+parser.add_argument(
+    '--CC-crawl',
+    nargs='+',
+    required=True,
+    help='List of CC time-slices to aggregate, e.g., --CC-crawl CC-MAIN-2017-13 CC-MAIN-2017-26',
+)
+parser.add_argument(
+    '--subnetworks',
+    action='store_true',
+    help='Whether to create subnetworks centered from gold-standard label.',
+)
 
-def main(slices: List[str]) -> None:
+
+def main(slices: List[str], construct_subnetworks: bool) -> None:
     base_path = get_root_dir()
 
     crawl_path = f'{base_path}/data/crawl-data/'
@@ -50,11 +66,12 @@ def main(slices: List[str]) -> None:
     pathlib.Path(output_path).mkdir(parents=True, exist_ok=True)
     temporal_edges_df = pd.read_csv(f'{temporal_path}/temporal_edges.csv')
     temporal_vertices_df = pd.read_csv(f'{temporal_path}/temporal_nodes.csv')
-    construct_subnetwork(dqr_path, output_path, temporal_edges_df, temporal_vertices_df)
+    if construct_subnetworks:
+        construct_subnetwork(
+            dqr_path, output_path, temporal_edges_df, temporal_vertices_df
+        )
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print('Usage: main.py [CC-MAIN-YYYY-NN ...]')
-        sys.exit(1)
-    main(sys.argv[1:])
+    args = parser.parse_args()
+    main(args.CC_crawl, args.subnetworks)
