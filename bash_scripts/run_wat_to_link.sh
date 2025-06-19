@@ -29,8 +29,8 @@ export PYSPARK_DRIVER_PYTHON="$VENV_PATH/bin/python"
 
 
 # Run the Spark job
-# TODO: Change test_wat.txt -> "all_wat_$CRAWL.txt" left for local testing purposes
-/opt/spark/bin/spark-submit \
+# TODO: Change test_wat.txt -> "all_wat_${CRAWL}.txt" left for local testing purposes
+"$VENV_PATH"/bin/spark-submit \
   --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py" \
   "$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py" \
   "$INPUT_DIR/test_wat.txt" \
