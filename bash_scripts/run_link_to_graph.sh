@@ -17,7 +17,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 DATA_DIR="$PROJECT_ROOT/data"
 
-VENV_PATH="$PROJECT_ROOT/.venv"
+VENV_PATH="$PROJECT_ROOT/venv"
+SPARK_HOME="$HOME/spark"
 
 # Activate the virtual environment
 source "$VENV_PATH/bin/activate"
@@ -34,7 +35,7 @@ rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
 
-/opt/spark/bin/spark-submit \
+"$SPARK_HOME/bin/spark-submit" \
   --driver-memory 2g \
   --executor-memory 2g \
   --conf spark.sql.shuffle.partitions=4 \

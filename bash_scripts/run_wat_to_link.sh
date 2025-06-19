@@ -18,7 +18,8 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 DATA_DIR="$PROJECT_ROOT/data"
 INPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/input"
 
-VENV_PATH="$PROJECT_ROOT/.venv"
+VENV_PATH="$PROJECT_ROOT/venv"
+SPARK_HOME="$HOME/spark"
 
 # Activate the virtual environment
 source "$VENV_PATH/bin/activate"
@@ -30,7 +31,7 @@ export PYSPARK_DRIVER_PYTHON="$VENV_PATH/bin/python"
 
 # Run the Spark job
 # TODO: Change test_wat.txt -> "all_wat_$CRAWL.txt" left for local testing purposes
-/opt/spark/bin/spark-submit \
+"$SPARK_HOME/bin/spark-submit" \
   --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py" \
   "$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py" \
   "$INPUT_DIR/test_wat.txt" \
