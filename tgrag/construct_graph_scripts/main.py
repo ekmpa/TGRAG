@@ -25,8 +25,8 @@ def main(slices: List[str]) -> None:
 
     for slice_id in slices:
         move_and_rename_compressed_outputs(
-            source_base=f'{base_path}/{slice_id}/output_text_dir',
-            target_base_root=f'{base_path}/{slice_id}/output_text_dir',
+            source_base=f'{crawl_path}/{slice_id}/output_text_dir',
+            target_base_root=f'{crawl_path}/{slice_id}/output_text_dir',
         )
         vertices_path = os.path.join(
             f'{crawl_path}/{slice_id}/output_text_dir/', 'vertices.txt.gz'
@@ -55,6 +55,6 @@ def main(slices: List[str]) -> None:
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        print('Usage: main.py CC-MAIN-YYYY-NN [CC-MAIN-YYYY-NN ...]')
+        print('Usage: main.py [CC-MAIN-YYYY-NN ...]')
         sys.exit(1)
     main(sys.argv[1:])
