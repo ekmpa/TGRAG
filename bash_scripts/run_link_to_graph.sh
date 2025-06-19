@@ -39,7 +39,7 @@ rm -rf "./spark-warehouse/host_graph_output_edges"
 
 
 
-/opt/spark/bin/spark-submit \
+"$VENV_PATH"/bin/spark-submit \
   --driver-memory 2g \
   --executor-memory 2g \
   --conf spark.sql.shuffle.partitions=4 \
