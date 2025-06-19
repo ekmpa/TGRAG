@@ -10,10 +10,6 @@ from tgrag.utils.path import get_root_dir
 
 def main(slices: List[str]) -> None:
     file_path = get_root_dir()
-    move_and_rename_compressed_outputs(
-        source_base=f'{file_path}/data/output_text_dir',
-        target_base_root=f'{file_path}/data/output_text_dir',
-    )
 
     base_path = f'{file_path}/data/crawl-data/'
     output_dir = os.path.join(base_path, 'temporal')
@@ -21,6 +17,10 @@ def main(slices: List[str]) -> None:
     merger = TemporalGraphMerger(output_dir)
 
     for slice_id in slices:
+        move_and_rename_compressed_outputs(
+            source_base=f'{base_path}/{slice_id}/output_text_dir',
+            target_base_root=f'{base_path}/{slice_id}/output_text_dir',
+        )
         vertices_path = os.path.join(
             f'{base_path}/{slice_id}/output_text_dir/', 'vertices.txt.gz'
         )
