@@ -17,10 +17,6 @@ from tgrag.utils.path import get_root_dir
 
 def main(slices: List[str]) -> None:
     base_path = get_root_dir()
-    move_and_rename_compressed_outputs(
-        source_base=f'{base_path}/data/output_text_dir',
-        target_base_root=f'{base_path}/data/output_text_dir',
-    )
 
     crawl_path = f'{base_path}/data/crawl-data/'
     output_dir = os.path.join(crawl_path, 'temporal')
@@ -28,6 +24,12 @@ def main(slices: List[str]) -> None:
     merger = TemporalGraphMerger(output_dir)
 
     for slice_id in slices:
+
+        move_and_rename_compressed_outputs(
+            source_base=f'{base_path}/data/crawl-data/{slice_id}/output_text_dir',
+            target_base_root=f'{base_path}/data/crawl-data/{slice_id}/output_text_dir',
+        )
+
         vertices_path = os.path.join(
             f'{crawl_path}/{slice_id}/output_text_dir/', 'vertices.txt.gz'
         )
@@ -54,7 +56,7 @@ def main(slices: List[str]) -> None:
 
 
 if __name__ == '__main__':
-    main(['CC-MAIN-2017-13'])
+    #main(['CC-MAIN-2024-10'])
     if len(sys.argv) < 2:
         print('Usage: main.py CC-MAIN-YYYY-NN [CC-MAIN-YYYY-NN ...]')
         sys.exit(1)
