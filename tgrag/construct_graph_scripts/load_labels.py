@@ -1,38 +1,26 @@
-import gzip
-import pandas as pd
-import tldextract
-from graph_utils.matching import extract_graph_domains
 import argparse
 import os
 
+import pandas as pd
+from graph_utils.matching import extract_graph_domains
+
+
 def load_credibility_scores(path: str, use_core: bool = False) -> pd.DataFrame:
     cred_df = pd.read_csv(path)
-    # cred_df['domain'] = (
-    #     cred_df['domain'].str.strip().str.lower().str.replace(r'^www\.', '', regex=True)
-    # )
-
-    # if use_core:
-    #     cred_df['match_domain'] = cred_df['domain'].apply(
-    #         lambda d: tldextract.extract(d).domain
-    #     )
-    # else:
-    #     cred_df['match_domain'] = cred_df['domain'].apply(
-    #         lambda d: f'{tldextract.extract(d).domain}.{tldextract.extract(d).suffix}'
-    #     )
     cred_df['match_domain'] = cred_df['domain']
-
     return cred_df[['match_domain', 'pc1']]
 
-def get_credibility_intersection(source_path: str, time_slice: str) -> None:
 
+def get_credibility_intersection(source_path: str, time_slice: str) -> None:
     # Adjust paths
     cred_scores_path = f'{source_path}/dqr/domain_pc1.csv'
-    vertices_path = f'{source_path}/crawl-data/{time_slice}/output_text_dir/vertices.txt.gz'
+    vertices_path = (
+        f'{source_path}/crawl-data/{time_slice}/output_text_dir/vertices.txt.gz'
+    )
     print(f'Opening vertices file: {vertices_path}')
     output_csv_path = f'{source_path}/crawl-data/{time_slice}/node_credibility.csv'
 
     cred_df = load_credibility_scores(cred_scores_path)
-    print(cred_df.head())
 
     vertices_df = extract_graph_domains(vertices_path)
 
@@ -65,17 +53,20 @@ def get_credibility_intersection(source_path: str, time_slice: str) -> None:
         f'{matched_labels} / {total_labels} credibility labels matched at least once on the graph ({label_percentage:.2f}%).'
     )
 
-def main():
-    """ Main function to be used for debugging, 
-    actually running the label matching takes place in main.py
+
+def main() -> None:
+    """Main function to be used for debugging,
+    actually running the label matching takes place in main.py.
     """
-    parser = argparse.ArgumentParser(description="Run credibility annotation on a crawl slice.")
-    parser.add_argument("slice", help="Crawl slice ID, e.g., CC-MAIN-2024-10")
+    parser = argparse.ArgumentParser(
+        description='Run credibility annotation on a crawl slice.'
+    )
+    parser.add_argument('slice', help='Crawl slice ID, e.g., CC-MAIN-2024-10')
     args = parser.parse_args()
 
     source_path = os.path.expanduser(f'~/CrediGraph/data')
     get_credibility_intersection(source_path, args.slice)
 
+
 if __name__ == '__main__':
     main()
-    

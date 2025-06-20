@@ -24,7 +24,6 @@ def main(slices: List[str]) -> None:
     merger = TemporalGraphMerger(output_dir)
 
     for slice_id in slices:
-
         move_and_rename_compressed_outputs(
             source_base=f'{base_path}/data/crawl-data/{slice_id}/output_text_dir',
             target_base_root=f'{base_path}/data/crawl-data/{slice_id}/output_text_dir',
@@ -56,7 +55,6 @@ def main(slices: List[str]) -> None:
 
 
 if __name__ == '__main__':
-    #main(['CC-MAIN-2024-10'])
     if len(sys.argv) < 2:
         print('Usage: main.py CC-MAIN-YYYY-NN [CC-MAIN-YYYY-NN ...]')
         sys.exit(1)
