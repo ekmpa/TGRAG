@@ -15,9 +15,18 @@ CRAWL="$1"
 # Get the root of the project (one level above this script's directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-DATA_DIR="$PROJECT_ROOT/data"
-
 VENV_PATH="$PROJECT_ROOT/.venv"
+SPARK_HOME="$HOME/spark" # also need to define JAVA_HOME for cluster use
+
+# Use SCRATCH if defined, else fallback to project-local data dir
+# For cluster use
+if [ -z "$SCRATCH" ]; then
+    DATA_DIR="$PROJECT_ROOT/data"
+    SPARK_WAREHOUSE="spark-warehouse"
+else
+    DATA_DIR="$SCRATCH"
+    SPARK_WAREHOUSE="$SCRATCH/spark-warehouse"
+fi
 
 # Activate the virtual environment
 source "$VENV_PATH/bin/activate"
@@ -34,10 +43,8 @@ rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
 echo "Cleaning up:"
-rm -rf "./spark-warehouse/host_graph_output_vertices"
-rm -rf "./spark-warehouse/host_graph_output_edges"
-
-
+rm -rf "$SPARK_WAREHOUSE/host_graph_output_vertices"
+rm -rf "$SPARK_WAREHOUSE/host_graph_output_edges"
 
 "$VENV_PATH"/bin/spark-submit \
   --driver-memory 2g \
@@ -46,7 +53,7 @@ rm -rf "./spark-warehouse/host_graph_output_edges"
   --conf spark.io.compression.codec=snappy \
   --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py,$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py,$PROJECT_ROOT/tgrag/cc-scripts/json_importer.py" \
   "$PROJECT_ROOT/tgrag/cc-scripts/hostlinks_to_graph.py" \
-  "spark-warehouse/wat_output_table" \
+  "$SPARK_WAREHOUSE/wat_output_table" \
   host_graph_output \
   --output_format "parquet" \
   --output_compression "snappy" \

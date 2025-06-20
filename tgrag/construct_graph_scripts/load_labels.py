@@ -1,61 +1,26 @@
-import gzip
-
 import pandas as pd
-import tldextract
+
+from tgrag.utils.matching import extract_graph_domains
 
 
 def load_credibility_scores(path: str, use_core: bool = False) -> pd.DataFrame:
     cred_df = pd.read_csv(path)
-    cred_df['domain'] = (
-        cred_df['domain'].str.strip().str.lower().str.replace(r'^www\.', '', regex=True)
-    )
-
-    if use_core:
-        cred_df['match_domain'] = cred_df['domain'].apply(
-            lambda d: tldextract.extract(d).domain
-        )
-    else:
-        cred_df['match_domain'] = cred_df['domain'].apply(
-            lambda d: f'{tldextract.extract(d).domain}.{tldextract.extract(d).suffix}'
-        )
-
+    cred_df['match_domain'] = cred_df['domain']
     return cred_df[['match_domain', 'pc1']]
 
 
-def extract_graph_domains(filepath: str, use_core: bool = False) -> pd.DataFrame:
-    parsed = []
-    with gzip.open(filepath, 'rt', encoding='utf-8', errors='ignore') as f:
-        for i, line in enumerate(f):
-            line = line.strip().lower()
-            if not line:
-                continue
-
-            # TODO: There is a glaring error here,you are matching by name which is not correct. (e.g reuters.com != www.reuterscompany.com)
-            domain_part = line.split('\t', 1)[-1]
-            ext = tldextract.extract(domain_part)
-
-            if use_core and ext.domain:
-                parsed.append((i, ext.domain))
-            elif ext.domain and ext.suffix:
-                parsed.append((i, f'{ext.domain}.{ext.suffix}'))
-
-    return pd.DataFrame(parsed, columns=['node_id', 'match_domain'])
-
-
-def get_credibility_intersection(source_path: str) -> None:
-    # Read the slice from env variable
-    use_core = True
-
+def get_credibility_intersection(source_path: str, time_slice: str) -> None:
     # Adjust paths
     cred_scores_path = f'{source_path}/dqr/domain_pc1.csv'
-    vertices_path = f'{source_path}/output_text_dir/vertices.txt.gz'
+    vertices_path = (
+        f'{source_path}/crawl-data/{time_slice}/output_text_dir/vertices.txt.gz'
+    )
     print(f'Opening vertices file: {vertices_path}')
-    output_csv_path = f'{source_path}/output_text_dir/node_credibility.csv'
+    output_csv_path = f'{source_path}/crawl-data/{time_slice}/node_credibility.csv'
 
-    cred_df = load_credibility_scores(cred_scores_path, use_core=use_core)
-    print(f'INFO: Loaded credibility scores, use_core = {use_core}')
+    cred_df = load_credibility_scores(cred_scores_path)
 
-    vertices_df = extract_graph_domains(vertices_path, use_core=use_core)
+    vertices_df = extract_graph_domains(vertices_path)
 
     enriched_df = pd.merge(vertices_df, cred_df, on='match_domain', how='inner')
     enriched_df.to_csv(output_csv_path, index=False)

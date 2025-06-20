@@ -18,6 +18,7 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 
+INPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/input"
 
 while read -r CRAWL || [[ -n "$CRAWL" ]]; do
     # Skip empty lines or comments
@@ -25,7 +26,15 @@ while read -r CRAWL || [[ -n "$CRAWL" ]]; do
 
     echo "Processing $CRAWL..."
     echo "Removing previous $CRAWL spark-warehouse"
-    rm -rf "$PROJECT_ROOT/bash_scripts/spark-warehouse"
+
+    # Use SCRATCH if defined, else fallback to project-local data dir
+    # For cluster usage
+    if [ -z "$SCRATCH" ]; then
+        rm -rf "$PROJECT_ROOT/bash_scripts/spark-warehouse" # Remove re-created directories before running
+    else
+        rm -rf "$SCRATCH/spark-warehouse" # Remove re-created directories before running
+    fi
+
     ./get_data.sh "$CRAWL"
     echo "Data Downloaded for $CRAWL."
 
@@ -36,4 +45,5 @@ while read -r CRAWL || [[ -n "$CRAWL" ]]; do
     echo "Compressed graphs constructed for $CRAWL."
 
     echo "--------------------------------------"
+
 done < "$CRAWL_LIST_FILE"

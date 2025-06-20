@@ -13,7 +13,18 @@ CRAWL="$1"
 # Get the root of the project (one level above this script's directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-DATA_DIR="$PROJECT_ROOT/data"
+
+# Use SCRATCH if defined, else fallback to project-local data dir
+# For cluster use
+if [ -z "$SCRATCH" ]; then
+    echo "[WARN] SCRATCH not set, using local data directory."
+    DATA_DIR="$PROJECT_ROOT/data"
+    SPARK_WAREHOUSE="spark-warehouse"
+else
+    DATA_DIR="$SCRATCH"
+    SPARK_WAREHOUSE="$SCRATCH/CrediGraph/spark-warehouse"
+    echo "Using SCRATCH directory: $DATA_DIR"
+fi
 
 # Base URL used to download the path listings
 BASE_URL=https://data.commoncrawl.org
