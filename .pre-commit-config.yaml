@@ -74,12 +74,8 @@ repos:
       - id: sphinx-lint
         name: Check Sphinx
 
-  - repo: local
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.13.0
     hooks:
       - id: mypy
         name: mypy
-        entry: uv run mypy tgrag
-        language: system
-        always_run: true
-        pass_filenames: false
-        exclude: ^tgrag/cc-scripts/

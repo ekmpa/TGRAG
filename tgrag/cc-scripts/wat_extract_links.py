@@ -315,6 +315,8 @@ class ExtractLinksJob(CCSparkJob):
 
     def run_job(self, session):
         output = None
+        session.sql("DROP TABLE IF EXISTS host_graph_output_vertices")
+        session.sql("DROP TABLE IF EXISTS host_graph_output_edges")
         if self.args.input != '':
             input_data = session.sparkContext.textFile(
                 self.args.input, minPartitions=self.args.num_input_partitions
@@ -626,6 +628,5 @@ class ExtractHostLinksJob(ExtractLinksJob):
 
 
 if __name__ == '__main__':
-    # job = ExtractLinksJob()
     job = ExtractHostLinksJob()
     job.run()

@@ -94,8 +94,6 @@ addopts = [
 [tool.coverage.run]
 source = ["tgrag"]
 
-
-
 [tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",

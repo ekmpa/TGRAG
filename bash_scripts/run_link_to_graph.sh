@@ -15,21 +15,20 @@ CRAWL="$1"
 # Get the root of the project (one level above this script's directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+VENV_PATH="$PROJECT_ROOT/venv"
+SPARK_HOME="$HOME/spark" # also need to define JAVA_HOME for cluster use
 
 # Use SCRATCH if defined, else fallback to project-local data dir
 # For cluster use
 if [ -z "$SCRATCH" ]; then
-    echo "[WARN] SCRATCH not set, using local data directory."
+    SPARK_PATH = "$VENV_PATH"
     DATA_DIR="$PROJECT_ROOT/data"
     SPARK_WAREHOUSE="spark-warehouse"
 else
+    SPARK_PATH = "$SPARK_HOME"
     DATA_DIR="$SCRATCH"
     SPARK_WAREHOUSE="$SCRATCH/spark-warehouse"
-    echo "Using SCRATCH directory: $DATA_DIR"
 fi
-
-VENV_PATH="$PROJECT_ROOT/venv"
-SPARK_HOME="$HOME/spark" # also need to define JAVA_HOME for cluster use
 
 # Activate the virtual environment
 source "$VENV_PATH/bin/activate"
@@ -45,8 +44,11 @@ OUTPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/output_text_dir"
 rm -rf "$OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
+echo "Cleaning up:"
+rm -rf "$SPARK_WAREHOUSE/host_graph_output_vertices"
+rm -rf "$SPARK_WAREHOUSE/host_graph_output_edges"
 
-"$SPARK_HOME/bin/spark-submit" \
+"$SPARK_PATH"/bin/spark-submit \
   --driver-memory 2g \
   --executor-memory 2g \
   --conf spark.sql.shuffle.partitions=4 \

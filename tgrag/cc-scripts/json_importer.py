@@ -1,12 +1,12 @@
 """Import JSON modules with drop-in compatible API,
-trying modules with faster JSON parsers first: orjson, ujson, json
-Cf. https://github.com/commoncrawl/cc-pyspark/issues/41
+   trying modules with faster JSON parsers first: orjson, ujson, json
+   Cf. https://github.com/commoncrawl/cc-pyspark/issues/41
 """
 
 try:
-    pass
+    import orjson as json
 except ImportError:
     try:
-        pass
+        import ujson as json
     except ImportError:
-        pass
+        import json
