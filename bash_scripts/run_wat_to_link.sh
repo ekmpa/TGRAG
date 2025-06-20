@@ -16,7 +16,7 @@ CRAWL="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 SPARK_HOME="$HOME/spark"
-VENV_PATH="$PROJECT_ROOT/venv"
+VENV_PATH="$PROJECT_ROOT/.venv"
 
 # Use SCRATCH if defined, else fallback to project-local data dir
 # For cluster usage
