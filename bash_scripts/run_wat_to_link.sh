@@ -21,10 +21,8 @@ VENV_PATH="$PROJECT_ROOT/.venv"
 # Use SCRATCH if defined, else fallback to project-local data dir
 # For cluster usage
 if [ -z "$SCRATCH" ]; then
-    SPARK_PATH="$VENV_PATH"
     DATA_DIR="$PROJECT_ROOT/data"
 else
-    SPARK_PATH="$SPARK_HOME"
     DATA_DIR="$SCRATCH"
 fi
 
@@ -41,7 +39,7 @@ export PYSPARK_DRIVER_PYTHON="$VENV_PATH/bin/python"
 # Run the Spark job
 # Local testing: use "$INPUT_DIR/test_wat.txt"
 # Cluster / full usage: ""$INPUT_DIR/all_wat_$CRAWL.txt"
-"$SPARK_PATH/bin/spark-submit" \
+"$VENV_PATH/bin/spark-submit" \
   --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py" \
   "$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py" \
   "$INPUT_DIR/all_wat_$CRAWL.txt" \
