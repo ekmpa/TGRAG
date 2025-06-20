@@ -4,6 +4,8 @@ from tgrag.construct_graph_scripts.subnetwork_construct import (
     contains_base_domain,
 )
 
+# TO DO: this file does not have type annotations 
+
 
 @pytest.fixture
 def base_domain():
@@ -35,7 +37,7 @@ def test_contain_base_domain_r5(base_domain):
     input = 'www.nasa.org.com.io.to'
     assert contains_base_domain(input=input, base_domain=base_domain) == False
 
-
+# TO DO: r6 and r7 are identical right now.
 def test_contain_base_domain_r6(base_domain):
     input = 'org.nasa'
     assert contains_base_domain(input=input, base_domain=base_domain) == True
