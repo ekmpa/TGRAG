@@ -1,4 +1,4 @@
-# TGRAG
+# CrediGraph
 
 Data analysis for TG/RAG project @ CDL
 
@@ -8,7 +8,7 @@ Data analysis for TG/RAG project @ CDL
 
 The project uses [uv](https://docs.astral.sh/uv/) to manage and lock project dependencies for a consistent and reproducible environment. If you do not have `uv` installed on your system, visit [this page](https://docs.astral.sh/uv/getting-started/installation/) for installation instructions.
 
-**Note**: to get `uv`, run:
+**Note**: If you have `pip`, you can invoke:
 
 ```sh
 pip install uv
@@ -30,9 +30,6 @@ uv sync
 
 # The isolated env is .venv
 source .venv/bin/activate
-
-# If you have your environment and want to sync that instead, run
-uv sync --active
 ```
 
 ## Usage
@@ -40,5 +37,5 @@ uv sync --active
 ### Running full data processing scripts
 
 ```sh
-
+./bash_scripts/end-to-end.sh /bash_scripts/CC-Crawl/2025.txt
 ```
