@@ -15,10 +15,21 @@ CRAWL="$1"
 # Get the root of the project (one level above this script's directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-DATA_DIR="$PROJECT_ROOT/data"
+
+# Use SCRATCH if defined, else fallback to project-local data dir
+# For cluster use
+if [ -z "$SCRATCH" ]; then
+    echo "[WARN] SCRATCH not set, using local data directory."
+    DATA_DIR="$PROJECT_ROOT/data"
+    SPARK_WAREHOUSE="spark-warehouse"
+else
+    DATA_DIR="$SCRATCH"
+    SPARK_WAREHOUSE="$SCRATCH/spark-warehouse"
+    echo "Using SCRATCH directory: $DATA_DIR"
+fi
 
 VENV_PATH="$PROJECT_ROOT/venv"
-SPARK_HOME="$HOME/spark"
+SPARK_HOME="$HOME/spark" # also need to define JAVA_HOME for cluster use
 
 # Activate the virtual environment
 source "$VENV_PATH/bin/activate"
@@ -42,7 +53,7 @@ mkdir -p "$OUTPUT_DIR"
   --conf spark.io.compression.codec=snappy \
   --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py,$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py,$PROJECT_ROOT/tgrag/cc-scripts/json_importer.py" \
   "$PROJECT_ROOT/tgrag/cc-scripts/hostlinks_to_graph.py" \
-  "spark-warehouse/wat_output_table" \
+  "$SPARK_WAREHOUSE/wat_output_table" \
   host_graph_output \
   --output_format "parquet" \
   --output_compression "snappy" \

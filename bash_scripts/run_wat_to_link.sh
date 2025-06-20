@@ -15,7 +15,16 @@ CRAWL="$1"
 # Get the root of the project (one level above this script's directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-DATA_DIR="$PROJECT_ROOT/data"
+
+# Use SCRATCH if defined, else fallback to project-local data dir
+# For cluster usage
+if [ -z "$SCRATCH" ]; then
+    echo "[WARN] SCRATCH not set, using local data directory."
+    DATA_DIR="$PROJECT_ROOT/data"
+else
+    DATA_DIR="$SCRATCH"
+    echo "Using SCRATCH directory: $DATA_DIR"
+fi
 INPUT_DIR="$DATA_DIR/crawl-data/$CRAWL/input"
 
 VENV_PATH="$PROJECT_ROOT/venv"
@@ -30,10 +39,11 @@ export PYSPARK_DRIVER_PYTHON="$VENV_PATH/bin/python"
 
 
 # Run the Spark job
-# TODO: Change test_wat.txt -> "all_wat_$CRAWL.txt" left for local testing purposes
+# Local testing: use "$INPUT_DIR/test_wat.txt"
+# Cluster / full usage: ""$INPUT_DIR/all_wat_$CRAWL.txt"
 "$SPARK_HOME/bin/spark-submit" \
   --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py" \
   "$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py" \
-  "$INPUT_DIR/test_wat.txt" \
+  "$INPUT_DIR/all_wat_$CRAWL.txt" \
   "wat_output_table" \
   --input_base_url https://data.commoncrawl.org/
