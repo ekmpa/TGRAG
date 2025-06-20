@@ -34,7 +34,7 @@ parser.add_argument(
 def main(slices: List[str], construct_subnetworks: bool) -> None:
     base_path = get_root_dir()
 
-    crawl_path = f'{base_path}/data/crawl-data/'
+    crawl_path = f'{base_path}/data/crawl-data'
     output_dir = os.path.join(crawl_path, 'temporal')
 
     merger = TemporalGraphMerger(output_dir)

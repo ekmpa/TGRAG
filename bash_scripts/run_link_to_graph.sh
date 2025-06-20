@@ -21,11 +21,9 @@ SPARK_HOME="$HOME/spark" # also need to define JAVA_HOME for cluster use
 # Use SCRATCH if defined, else fallback to project-local data dir
 # For cluster use
 if [ -z "$SCRATCH" ]; then
-    SPARK_PATH = "$VENV_PATH"
     DATA_DIR="$PROJECT_ROOT/data"
     SPARK_WAREHOUSE="spark-warehouse"
 else
-    SPARK_PATH = "$SPARK_HOME"
     DATA_DIR="$SCRATCH"
     SPARK_WAREHOUSE="$SCRATCH/spark-warehouse"
 fi
@@ -48,7 +46,7 @@ echo "Cleaning up:"
 rm -rf "$SPARK_WAREHOUSE/host_graph_output_vertices"
 rm -rf "$SPARK_WAREHOUSE/host_graph_output_edges"
 
-"$SPARK_PATH"/bin/spark-submit \
+"$VENV_PATH"/bin/spark-submit \
   --driver-memory 2g \
   --executor-memory 2g \
   --conf spark.sql.shuffle.partitions=4 \
