@@ -1,5 +1,6 @@
 import pandas as pd
-from graph_utils.matching import extract_graph_domains
+
+from tgrag.utils.matching import extract_graph_domains
 
 
 def load_credibility_scores(path: str, use_core: bool = False) -> pd.DataFrame:
