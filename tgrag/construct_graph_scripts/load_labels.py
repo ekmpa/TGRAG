@@ -1,6 +1,3 @@
-import argparse
-import os
-
 import pandas as pd
 from graph_utils.matching import extract_graph_domains
 
@@ -52,21 +49,3 @@ def get_credibility_intersection(source_path: str, time_slice: str) -> None:
     print(
         f'{matched_labels} / {total_labels} credibility labels matched at least once on the graph ({label_percentage:.2f}%).'
     )
-
-
-def main() -> None:
-    """Main function to be used for debugging,
-    actually running the label matching takes place in main.py.
-    """
-    parser = argparse.ArgumentParser(
-        description='Run credibility annotation on a crawl slice.'
-    )
-    parser.add_argument('slice', help='Crawl slice ID, e.g., CC-MAIN-2024-10')
-    args = parser.parse_args()
-
-    source_path = os.path.expanduser(f'~/CrediGraph/data')
-    get_credibility_intersection(source_path, args.slice)
-
-
-if __name__ == '__main__':
-    main()
