@@ -7,19 +7,23 @@ from urllib.parse import urlparse
 
 import pandas as pd
 
+from tgrag.utils.merger import Merger
+
 # this scripts merges multiple CC-MAIN slices into a temporal graph
 # and allows for continual addition of new slices
 
 
-class TemporalGraphMerger:
+class TemporalGraphMerger(Merger):
     """Merges multiple slices into a temporal graph (both edges and nodes are temporal).
     Then saves the graph (CSV) and can continually add slices to it.
     """
 
     def __init__(self, output_dir: str) -> None:
-        self.output_dir: str = output_dir
-        self.edges: List[Tuple[int, int, int]] = []  # (src, dst, time_id)
-        self.domain_to_node: Dict[str, Tuple[int, int]] = {}  # domain → node_id
+        # self.output_dir: str = output_dir
+        # self.edges: List[Tuple[int, int, int]] = []  # (src, dst, time_id)
+        # self.domain_to_node: Dict[str, Tuple[int, int]] = {}  # domain → node_id
+        super().__init__(output_dir)
+
         self.slice_node_sets: Dict[str, Set[int]] = {}  # slice_id → set of node_ids
         self.next_node_id: int = 0
         self.time_ids_seen: Set[int] = set()
