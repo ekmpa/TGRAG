@@ -4,6 +4,7 @@ from typing import Dict, List, Tuple
 from urllib.parse import urlparse
 
 import pandas as pd
+import tldextract
 
 
 class Merger:
@@ -16,18 +17,19 @@ class Merger:
         self.edges: List[Tuple[int, int, int, str]] = []
         self.domain_to_node: Dict[str, Tuple[int, int]] = {}
 
-    def _normalize_domain(self, raw: str) -> str:
-        """Normalize domain strings for consistency across slices."""
-        raw = raw.strip().lower()
-        if '://' in raw:
-            raw = urlparse(raw).hostname or raw
-        if raw.startswith('www.'):
-            raw = raw[4:]
-        if ':' in raw:
-            raw = raw.split(':')[0]
-        if raw.endswith('.'):
-            raw = raw[:-1]
-        return raw
+    def _normalize_domain(self, url: str) -> str:
+        """Extract and normalize domain from a URL for consistency across slices."""
+        parsed = urlparse(url.strip().lower())
+        hostname = parsed.hostname or url
+
+        # Extract registered domain + suffix (e.g., example.co.uk)
+        ext = tldextract.extract(hostname)
+        if ext.domain and ext.suffix:
+            return f'{ext.suffix}.{ext.domain}'
+        elif ext.domain:
+            return ext.domain
+        else:
+            return hostname  # fallback, in case tldextract fails
 
     def _load_vertices(self, filepath: str) -> Tuple[List[str], List[int]]:
         """Helper to extract and load vertices from vertices.txt.gz."""
