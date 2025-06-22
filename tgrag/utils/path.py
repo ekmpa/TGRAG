@@ -1,17 +1,17 @@
 import os
-import pathlib
 from glob import glob
+from pathlib import Path
 
 
-def get_root_dir() -> pathlib.Path:
-    return pathlib.Path(__file__).parent.parent.parent
+def get_root_dir() -> Path:
+    return Path(__file__).parent.parent.parent
 
 
-def get_cwd() -> pathlib.Path:
-    return pathlib.Path.cwd()
+def get_cwd() -> Path:
+    return Path.cwd()
 
 
-def get_crawl_data_path(project_dir: str) -> str:
+def get_crawl_data_path(project_dir: Path) -> str:
     return os.path.join(
         os.environ.get('SCRATCH', os.path.join(project_dir, 'data')), 'crawl-data'
     )

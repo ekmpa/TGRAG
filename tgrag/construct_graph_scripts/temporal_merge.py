@@ -2,8 +2,7 @@ import gzip
 import os
 import re
 from glob import glob
-from typing import Dict, List, Optional, Set, Tuple
-from urllib.parse import urlparse
+from typing import Dict, Optional, Set
 
 import pandas as pd
 
@@ -54,40 +53,6 @@ class TemporalGraphMerger(Merger):
                 )
                 print('Continuing without loading existing CSVs.')
 
-    def _normalize_domain(self, raw: str) -> str:
-        """Normalize domain strings for consistency across slices."""
-        raw = raw.strip().lower()
-        if '://' in raw:
-            raw = urlparse(raw).hostname or raw
-        if raw.startswith('www.'):
-            raw = raw[4:]
-        if ':' in raw:
-            raw = raw.split(':')[0]
-        if raw.endswith('.'):
-            raw = raw[:-1]
-        return raw
-
-    def _load_vertices(self, filepath: str) -> Tuple[List[str], List[int]]:
-        """Helper to extract and load vertices from vertices.txt.gz."""
-        domains = []
-        node_ids = []
-        with gzip.open(filepath, 'rt', encoding='utf-8', errors='ignore') as f:
-            for line in f:
-                parts = line.strip().split('\t')
-                norm = self._normalize_domain(parts[1])
-                domains.append(norm)
-                node_ids.append(int(parts[0]))
-        return domains, node_ids
-
-    def _load_edges(self, filepath: str) -> List[Tuple[int, int]]:
-        with gzip.open(filepath, 'rt', encoding='utf-8', errors='ignore') as f:
-            result: List[Tuple[int, int]] = []
-            for line in f:
-                parts = line.strip().split()
-                if len(parts) == 2:
-                    result.append((int(parts[0]), int(parts[1])))
-            return result
-
     def _slice_to_time_id(self, next_root_path: str, slice_id: str) -> int:
         """Yield timestamp from slice ID (current logic: YYYYMMDD)."""
         pattern = os.path.join(next_root_path, slice_id, 'segments', '*', 'wat')
@@ -128,7 +93,7 @@ class TemporalGraphMerger(Merger):
         existing_node_ids = set(self.domain_to_node.values())
 
         # load vertices and edges using local -> global mapping
-        domains, node_ids = self._load_vertices(next_vertices_path)
+        domains, node_ids = super()._load_vertices(next_vertices_path)
         new_node_ids = set()
 
         for local_id, domain in enumerate(domains):
@@ -136,9 +101,9 @@ class TemporalGraphMerger(Merger):
                 new_node_ids.add(node_ids[local_id])
             self.domain_to_node[domain] = (node_ids[local_id], time_id)
 
-        edges = self._load_edges(next_edges_path)
+        edges = super()._load_edges(next_edges_path)
         for src_local, dst_local in edges:
-            self.edges.append((src_local, dst_local, time_id))
+            self.edges.append((src_local, dst_local, time_id, 'hyperlinks'))
 
         self.slice_node_sets[slice_id] = new_node_ids
         self.time_ids_seen.add(time_id)
@@ -151,23 +116,7 @@ class TemporalGraphMerger(Merger):
         if len(self.slice_node_sets) == 1:
             self._last_overlap = len(existing_node_ids & new_node_ids)
 
-    def save(self) -> None:
-        """Save merged graph to CSV."""
-        os.makedirs(self.output_dir, exist_ok=True)
-
-        pd.DataFrame(self.edges, columns=['src', 'dst', 'time_id']).to_csv(
-            os.path.join(self.output_dir, 'temporal_edges.csv'), index=False
-        )
-
-        df_nodes = pd.DataFrame(
-            [
-                {'domain': domain, 'node_id': node_id, 'time_id': time_id}
-                for domain, (node_id, time_id) in self.domain_to_node.items()
-            ]
-        )
-        df_nodes.to_csv(
-            os.path.join(self.output_dir, 'temporal_nodes.csv'), index=False
-        )
+        super().save()
 
     def print_overlap(self) -> None:
         """Print overlap stats across all / added slices."""
