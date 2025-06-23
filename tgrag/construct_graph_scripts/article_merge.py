@@ -1,4 +1,3 @@
-import argparse
 import os
 
 from tgrag.utils.article_merger import ArticleMerger
@@ -56,13 +55,13 @@ def merge(slice_id: str) -> None:
     # print(f"  Contains:   {edge_type_counts['contains']}")
 
 
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Merge WET articles with domain-level graph.'
-    )
-    parser.add_argument(
-        '--slice', required=True, help='CC-MAIN time slice (e.g. CC-MAIN-2017-13)'
-    )
-    args = parser.parse_args()
+# if __name__ == '__main__':
+#     parser = argparse.ArgumentParser(
+#         description='Merge WET articles with domain-level graph.'
+#     )
+#     parser.add_argument(
+#         '--slice', required=True, help='CC-MAIN time slice (e.g. CC-MAIN-2017-13)'
+#     )
+#     args = parser.parse_args()
 
-    merge(args.slice)
+#     merge(args.slice)
