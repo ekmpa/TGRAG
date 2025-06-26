@@ -31,12 +31,16 @@ def load_edge_csv(
     src_index_col: str,
     dst_index_col: str,
     encoders: Dict | None = None,
-) -> Tuple[Tensor, Tensor | None]:
-    df = pd.read_csv(path)
+) -> Tuple[torch.Tensor, torch.Tensor | None]:
+    usecols = [src_index_col, dst_index_col]
+    if encoders is not None:
+        usecols += [col for col in encoders if col not in usecols]
 
-    src = df[src_index_col]
-    dst = df[dst_index_col]
-    edge_index = torch.tensor([src, dst])
+    df = pd.read_csv(path, usecols=usecols)
+
+    src = torch.tensor(df[src_index_col].to_numpy(), dtype=torch.long)
+    dst = torch.tensor(df[dst_index_col].to_numpy(), dtype=torch.long)
+    edge_index = torch.stack([src, dst], dim=0)  # Shape: [2, num_edges]
 
     edge_attr = None
     if encoders is not None:
@@ -45,7 +49,6 @@ def load_edge_csv(
             if key in df.columns:
                 edge_attrs.append(encoder(df[key]))
             else:
-                # Global encoder (e.g RNIEncoder )
                 edge_attrs.append(encoder(len(df)))
 
         edge_attr = torch.cat(edge_attrs, dim=-1)
