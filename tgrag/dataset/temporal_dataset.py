@@ -10,7 +10,14 @@ from tgrag.utils.data_loading import load_edge_csv, load_node_csv
 
 
 class TemporalDataset(InMemoryDataset):
-    def __init__(self, root, encoding=None, transform=None, pre_transform=None):
+    def __init__(
+        self,
+        root,
+        encoding=None,
+        transform=None,
+        pre_transform=None,
+        force_process=False,
+    ):
         self.encoding = encoding
         super().__init__(root, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0], weights_only=False)
@@ -44,13 +51,15 @@ class TemporalDataset(InMemoryDataset):
 
         df = pd.read_csv(node_path)
         df = df.set_index('node_id').loc[mapping.keys()]
-        cr_score = torch.tensor(df['cr_score'].values, dtype=torch.float).unsqueeze(1)
+        cr_score = torch.tensor(df['cr_score'].values, dtype=torch.float)
 
         edge_index, edge_attr = load_edge_csv(
             path=edge_path, src_index_col='src', dst_index_col='dst', encoders=None
         )
 
         adj_t = to_torch_csr_tensor(edge_index, size=(x_full.size(0), x_full.size(0)))
+
+        cr_score = cr_score.unsqueeze(1)
 
         data = Data(x=x_full, y=cr_score, edge_index=edge_index, edge_attr=edge_attr)
         data.adj_t = adj_t

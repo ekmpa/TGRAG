@@ -9,4 +9,4 @@ class RNIEncoder:
     def __call__(self, length: int) -> Tensor:
         if self.seed is not None:
             torch.manual_seed(self.seed)
-        return torch.randn(length)
+        return torch.randn(length).unsqueeze(1)
