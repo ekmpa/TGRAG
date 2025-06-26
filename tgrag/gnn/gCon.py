@@ -31,7 +31,7 @@ class GCN(torch.nn.Module):
         for bn in self.bns:
             bn.reset_parameters()
 
-    def forward(self, x: Tensor, adj_t: Tensor) -> Tensor:
+    def forward(self, x: Tensor, adj_t: Tensor):
         for i, conv in enumerate(self.convs[:-1]):
             x = conv(x, adj_t)
             x = self.bns[i](x)
