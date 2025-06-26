@@ -32,11 +32,11 @@ class SAGE(torch.nn.Module):
         for bn in self.bns:
             bn.reset_parameters()
 
-    def forward(self, x: Tensor, adj_t: Tensor):
+    def forward(self, x: Tensor, adj_t: Tensor) -> Tensor:
         for i, conv in enumerate(self.convs[:-1]):
             x = conv(x, adj_t)
             x = self.bns[i](x)
             x = F.relu(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.convs[-1](x, adj_t)
-        return x.log_softmax(dim=-1)
+        return x
