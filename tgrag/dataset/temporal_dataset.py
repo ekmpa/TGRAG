@@ -10,7 +10,7 @@ from tgrag.utils.data_loading import load_edge_csv, load_node_csv
 
 
 class TemporalDataset(InMemoryDataset):
-    def __init__(self, root, encoding=None, transform=None, pre_transform=None) -> None:
+    def __init__(self, root, encoding=None, transform=None, pre_transform=None):
         self.encoding = encoding
         super().__init__(root, transform, pre_transform)
         self.data, self.slices = torch.load(self.processed_paths[0], weights_only=False)
