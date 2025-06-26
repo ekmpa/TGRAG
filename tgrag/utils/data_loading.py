@@ -16,10 +16,10 @@ def load_node_csv(
         xs = []
         for key, encoder in encoders.items():
             if key in df.columns:
-                xs.append(encoder[df[key]])
+                xs.append(encoder(df[key]))
             else:
                 # Global encoder (In our case the RNIEncoder)
-                xs.append(encoder(len(df)))
+                xs.append(encoder(df.shape[0]))
 
         x = torch.cat(xs, dim=-1)
 
