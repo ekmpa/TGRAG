@@ -16,7 +16,6 @@ CRAWL="$1"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 VENV_PATH="$PROJECT_ROOT/.venv"
-SPARK_HOME="$HOME/spark" # also need to define JAVA_HOME for cluster use
 
 # Use SCRATCH if defined, else fallback to project-local data dir
 # For cluster use

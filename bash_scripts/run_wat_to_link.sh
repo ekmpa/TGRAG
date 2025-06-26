@@ -15,7 +15,6 @@ CRAWL="$1"
 # Get the root of the project (one level above this script's directory)
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
-SPARK_HOME="$HOME/spark"
 VENV_PATH="$PROJECT_ROOT/.venv"
 
 # Use SCRATCH if defined, else fallback to project-local data dir
@@ -42,6 +41,6 @@ export PYSPARK_DRIVER_PYTHON="$VENV_PATH/bin/python"
 "$VENV_PATH/bin/spark-submit" \
   --py-files "$PROJECT_ROOT/tgrag/cc-scripts/sparkcc.py" \
   "$PROJECT_ROOT/tgrag/cc-scripts/wat_extract_links.py" \
-  "$INPUT_DIR/all_wat_$CRAWL.txt" \
+  "$INPUT_DIR/test_wat.txt" \
   "wat_output_table" \
   --input_base_url https://data.commoncrawl.org/
