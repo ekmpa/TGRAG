@@ -26,7 +26,7 @@ class GAT(torch.nn.Module):
 
         self.dropout = dropout
 
-    def reset_parameters(self):
+    def reset_parameters(self) -> None:
         for conv in self.convs:
             conv.reset_parameters()
         for bn in self.bns:
@@ -39,4 +39,4 @@ class GAT(torch.nn.Module):
             x = F.relu(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
         x = self.convs[-1](x, adj_t)
-        return x.log_softmax(dim=-1)
+        return x

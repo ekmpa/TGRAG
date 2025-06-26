@@ -1,5 +1,6 @@
 import torch
 import torch.nn.functional as F
+from torch import Tensor
 from torch_geometric.nn import GCNConv
 
 
@@ -25,13 +26,13 @@ class GCN(torch.nn.Module):
 
         self.dropout = dropout
 
-    def reset_parameters(self):
+    def reset_parameters(self) -> None:
         for conv in self.convs:
             conv.reset_parameters()
         for bn in self.bns:
             bn.reset_parameters()
 
-    def forward(self, x: Tensor, adj_t: Tensor):
+    def forward(self, x: Tensor, adj_t: Tensor) -> Tensor:
         for i, conv in enumerate(self.convs[:-1]):
             x = conv(x, adj_t)
             x = self.bns[i](x)

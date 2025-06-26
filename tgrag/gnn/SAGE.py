@@ -26,7 +26,7 @@ class SAGE(torch.nn.Module):
 
         self.dropout = dropout
 
-    def reset_parameters(self):
+    def reset_parameters(self) -> None:
         for conv in self.convs:
             conv.reset_parameters()
         for bn in self.bns:
