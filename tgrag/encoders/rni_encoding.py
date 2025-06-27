@@ -1,8 +1,10 @@
 import torch
 from torch import Tensor
 
+from tgrag.encoders.encoder import Encoder
 
-class RNIEncoder:
+
+class RNIEncoder(Encoder):
     def __init__(self, seed: int | None = None):
         self.seed = seed
 

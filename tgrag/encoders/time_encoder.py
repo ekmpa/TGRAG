@@ -2,8 +2,10 @@ import torch
 from pandas import Series
 from torch import Tensor
 
+from tgrag.encoders.encoder import Encoder
 
-class TimeStampEncoder:
+
+class TimeStampEncoder(Encoder):
     def __init__(self, granularity: int):
         self.granularity = granularity
 
