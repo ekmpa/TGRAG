@@ -32,11 +32,11 @@ class GAT(torch.nn.Module):
         for bn in self.bns:
             bn.reset_parameters()
 
-    def forward(self, x: Tensor, adj_t: Tensor) -> Tensor:
+    def forward(self, x: Tensor, edge_index: Tensor) -> Tensor:
         for i, conv in enumerate(self.convs[:-1]):
-            x = conv(x, adj_t)
+            x = conv(x, edge_index)
             x = self.bns[i](x)
             x = F.relu(x)
             x = F.dropout(x, p=self.dropout, training=self.training)
-        x = self.convs[-1](x, adj_t)
+        x = self.convs[-1](x, edge_index)
         return x
