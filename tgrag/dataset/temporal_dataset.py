@@ -1,5 +1,5 @@
 import os
-from typing import Dict, List
+from typing import Callable, Dict, List, Optional
 
 import pandas as pd
 import torch
@@ -12,11 +12,10 @@ from tgrag.utils.data_loading import load_edge_csv, load_node_csv
 class TemporalDataset(InMemoryDataset):
     def __init__(
         self,
-        root,
-        encoding=None,
-        transform=None,
-        pre_transform=None,
-        force_process=False,
+        root: str,
+        encoding: Optional[Dict[str, Callable]] = None,
+        transform: Optional[Callable] = None,
+        pre_transform: Optional[Callable] = None,
     ):
         self.encoding = encoding
         super().__init__(root, transform, pre_transform)
