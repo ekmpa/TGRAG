@@ -33,7 +33,7 @@ def save_loss_results(
     encoder_name: str,
 ) -> None:
     root = get_root_dir()
-    save_dir = root / 'experiment' / 'results' / 'logs' / model_name / encoder_name
+    save_dir = root / 'experiments' / 'results' / 'logs' / model_name / encoder_name
     save_dir.mkdir(parents=True, exist_ok=True)
     save_path = save_dir / 'loss_tuple_run.pkl'
     with open(save_path, 'wb') as f:
@@ -45,11 +45,15 @@ def train(
     data: TemporalDataset,
     train_idx: torch.Tensor,
     optimizer: torch.optim.Adam,
+    model_name: str,
 ) -> float:
     model.train()
 
     optimizer.zero_grad()
-    out = model(data.x, data.adj_t)[train_idx]
+    if model_name == 'GAT':
+        out = model(data.x, data.edge_index)[train_idx]
+    else:
+        out = model(data.x, data.adj_t)[train_idx]
     loss = F.mse_loss(out.squeeze(), data.y.squeeze(1)[train_idx])
     loss.backward()
     optimizer.step()
@@ -58,10 +62,16 @@ def train(
 
 
 def test(
-    model: torch.nn.Module, data: TemporalDataset, split_idx: Dict
+    model: torch.nn.Module,
+    data: TemporalDataset,
+    split_idx: Dict,
+    model_name: str,
 ) -> Tuple[float, float, float]:
     model.eval()
-    out = model(data.x, data.adj_t)
+    if model_name == 'GAT':
+        out = model(data.x, data.edge_index)
+    else:
+        out = model(data.x, data.adj_t)
 
     y_true = data.y
     y_pred = out
@@ -157,8 +167,8 @@ def main() -> None:
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
         loss_tuple_epoch: List[Tuple[float, float, float]] = []
         for epoch in tqdm(range(1, 1 + args.epochs), desc='Epochs'):
-            loss = train(model, data, train_idx, optimizer)
-            result = test(model, data, split_idx)
+            loss = train(model, data, train_idx, optimizer, args.model)
+            result = test(model, data, split_idx, args.model)
             loss_tuple_epoch.append(result)
             logger.add_result(run, result)
 
