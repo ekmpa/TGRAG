@@ -1,16 +1,20 @@
 import argparse
-from typing import Dict, Tuple, Type
+import pickle
+from typing import Dict, List, Tuple, Type
 
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm
 
 from tgrag.dataset.temporal_dataset import TemporalDataset
+from tgrag.encoders.encoder import Encoder
 from tgrag.encoders.rni_encoding import RNIEncoder
 from tgrag.gnn.GAT import GAT
 from tgrag.gnn.gCon import GCN
 from tgrag.gnn.SAGE import SAGE
+from tgrag.utils.logger import Logger
 from tgrag.utils.path import get_root_dir
+from tgrag.utils.plot import plot_avg_rmse_loss
 
 MODEL_CLASSES: Dict[str, Type[torch.nn.Module]] = {
     'GCN': GCN,
@@ -18,9 +22,22 @@ MODEL_CLASSES: Dict[str, Type[torch.nn.Module]] = {
     'SAGE': SAGE,
 }
 
-ENCODER_CLASSES = {
+ENCODER_CLASSES: Dict[str, Type[Encoder]] = {
     'RNI': RNIEncoder,
 }
+
+
+def save_loss_results(
+    loss_tuple_run: List[List[Tuple[float, float, float]]],
+    model_name: str,
+    encoder_name: str,
+) -> None:
+    root = get_root_dir()
+    save_dir = root / 'experiment' / 'results' / 'logs' / model_name / encoder_name
+    save_dir.mkdir(parents=True, exist_ok=True)
+    save_path = save_dir / 'loss_tuple_run.pkl'
+    with open(save_path, 'wb') as f:
+        pickle.dump(loss_tuple_run, f)
 
 
 def train(
@@ -49,15 +66,17 @@ def test(
     y_true = data.y
     y_pred = out
 
-    train_mse = F.mse_loss(
-        y_pred[split_idx['train']], y_true[split_idx['train']]
+    train_rmse = torch.sqrt(
+        F.mse_loss(y_pred[split_idx['train']], y_true[split_idx['train']])
     ).item()
-    valid_mse = F.mse_loss(
-        y_pred[split_idx['valid']], y_true[split_idx['valid']]
+    valid_rmse = torch.sqrt(
+        F.mse_loss(y_pred[split_idx['valid']], y_true[split_idx['valid']])
     ).item()
-    test_mse = F.mse_loss(y_pred[split_idx['test']], y_true[split_idx['test']]).item()
+    test_rmse = torch.sqrt(
+        F.mse_loss(y_pred[split_idx['test']], y_true[split_idx['test']])
+    ).item()
 
-    return train_mse, valid_mse, test_mse
+    return train_rmse, valid_rmse, test_rmse
 
 
 def main() -> None:
@@ -66,7 +85,7 @@ def main() -> None:
     parser.add_argument(
         '--seed', type=int, default=42, help='Seed for reproducible results.'
     )
-    parser.add_argument('--log_steps', type=int, default=1, help='Log steps.')
+    parser.add_argument('--log_steps', type=int, default=50, help='Log steps.')
     parser.add_argument(
         '--model',
         type=str,
@@ -101,9 +120,8 @@ def main() -> None:
     )
     parser.add_argument('--dropout', type=float, default=0.5, help='Dropout value.')
     parser.add_argument('--lr', type=float, default=0.01, help='Learning rate.')
-    parser.add_argument('--epochs', type=int, default=500, help='Number of epochs.')
-    parser.add_argument('--runs', type=int, default=10, help='Number of trials.')
-    parser.add_argument('--help')
+    parser.add_argument('--epochs', type=int, default=10, help='Number of epochs.')
+    parser.add_argument('--runs', type=int, default=3, help='Number of trials.')
     args = parser.parse_args()
     print(args)
 
@@ -131,23 +149,35 @@ def main() -> None:
         data.num_features, args.hidden_channels, 1, args.num_layers, args.dropout
     ).to(device)
 
+    logger = Logger(args.runs, args)
+
+    loss_tuple_run: List[List[Tuple[float, float, float]]] = []
     for run in tqdm(range(args.runs), desc='Runs'):
         model.reset_parameters()
         optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+        loss_tuple_epoch: List[Tuple[float, float, float]] = []
         for epoch in tqdm(range(1, 1 + args.epochs), desc='Epochs'):
             loss = train(model, data, train_idx, optimizer)
             result = test(model, data, split_idx)
+            loss_tuple_epoch.append(result)
+            logger.add_result(run, result)
 
             if epoch % args.log_steps == 0:
-                train_acc, valid_acc, test_acc = result
+                train_loss, valid_loss, test_loss = result
                 print(
                     f'Run: {run + 1:02d}, '
                     f'Epoch: {epoch:02d}, '
                     f'Loss: {loss:.4f}, '
-                    f'Train: {100 * train_acc:.2f}%, '
-                    f'Valid: {100 * valid_acc:.2f}% '
-                    f'Test: {100 * test_acc:.2f}%'
+                    f'Train Loss: {100 * train_loss:.2f}%, '
+                    f'Valid Loss: {100 * valid_loss:.2f}% '
+                    f'Test Loss: {100 * test_loss:.2f}%'
                 )
+        loss_tuple_run.append(loss_tuple_epoch)
+
+        logger.print_statistics(run)
+    logger.print_statistics()
+    plot_avg_rmse_loss(loss_tuple_run, args.model)
+    save_loss_results(loss_tuple_run, args.model, args.encoder)
 
 
 if __name__ == '__main__':
