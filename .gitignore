@@ -1,5 +1,6 @@
 #Ours
 data/
+results/
 saved_graphs/
 spark-warehouse/
 #External repos
