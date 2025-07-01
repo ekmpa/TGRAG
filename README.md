@@ -2,7 +2,7 @@
 
 Data analysis for TG/RAG project @ CDL
 
-![CrediGraph Logo](img/logo.png)
+<img src="img/logo.png" alt="CrediGraph Logo" style="width: 250px; height: auto;" />
 
 ## Getting Started
 
