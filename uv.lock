@@ -708,6 +708,18 @@ wheels = [
 ]
 
 [[package]]
+name = "hf-argparser"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/5b/31/8fc8e22c8b05dc68c97fd483017ecda08c48e478a77a94f492864afceadb/hf_argparser-0.1.1.tar.gz", hash = "sha256:9290e503b85eadd7ee90cb2790eaeefc8e2d593bfd1bbff745af435f5dcc83bc", size = 17578 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a0/8a/55985913b461883f9fe6c9979bdfb1e6e3f9b43121ff3010b7511f28aa00/hf_argparser-0.1.1-py3-none-any.whl", hash = "sha256:7e8766e5509486b3a88fcb38cbc5a45fc907628762bd86faebb76ad9a0f6541e", size = 11926 },
+]
+
+[[package]]
 name = "identify"
 version = "2.6.12"
 source = { registry = "https://pypi.org/simple" }
@@ -2503,10 +2515,12 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "boto3" },
+    { name = "hf-argparser" },
     { name = "idna" },
     { name = "mypy" },
     { name = "orjson" },
     { name = "pyspark" },
+    { name = "pyyaml" },
     { name = "requests" },
     { name = "scipy" },
     { name = "tldextract" },
@@ -2534,10 +2548,12 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "boto3", specifier = ">=1.38.33" },
+    { name = "hf-argparser", specifier = ">=0.1.1" },
     { name = "idna", specifier = ">=3.10" },
     { name = "mypy", specifier = ">=1.16.1" },
     { name = "orjson", specifier = ">=3.10.18" },
     { name = "pyspark", specifier = ">=4.0.0" },
+    { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "scipy", specifier = ">=1.13.1" },
     { name = "tldextract", specifier = ">=5.3.0" },

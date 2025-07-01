@@ -10,10 +10,12 @@ authors = [
 ]
 dependencies = [
     "boto3>=1.38.33",
+    "hf-argparser>=0.1.1",
     "idna>=3.10",
     "mypy>=1.16.1",
     "orjson>=3.10.18",
     "pyspark>=4.0.0",
+    "pyyaml>=6.0.2",
     "requests>=2.32.3",
     "scipy>=1.13.1",
     "tldextract>=5.3.0",

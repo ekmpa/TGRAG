@@ -61,7 +61,7 @@ def load_all_loss_tuples(
     """
     results = {}
     root = get_root_dir()
-    base_path = root / 'experiments' / results_dir
+    base_path = root / results_dir
     for model_dir in base_path.iterdir():
         for encoder_dir in model_dir.iterdir():
             file_path = encoder_dir / 'loss_tuple_run.pkl'
@@ -104,7 +104,7 @@ def plot_metric_across_models(
     plt.tight_layout()
 
     root = get_root_dir()
-    save_dir = root / 'experiments' / 'results' / 'plots'
+    save_dir = root / 'results' / 'plots'
     save_dir.mkdir(parents=True, exist_ok=True)
     save_path = save_dir / save_filename
 

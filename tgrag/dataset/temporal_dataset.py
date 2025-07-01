@@ -13,7 +13,7 @@ class TemporalDataset(InMemoryDataset):
     def __init__(
         self,
         root: str,
-        encoding: Optional[Dict[str, Callable]] = None,
+        encoding: Optional[Dict[str, str]] = None,
         transform: Optional[Callable] = None,
         pre_transform: Optional[Callable] = None,
     ):

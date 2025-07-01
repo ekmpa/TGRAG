@@ -1,11 +1,42 @@
-from typing import Any, List, Tuple
+import logging
+from typing import Any, List, Optional, Tuple
 
 import torch
 
 
+def setup_logging(
+    log_file_path: Optional[str] = None,
+    log_file_logging_level: int = logging.DEBUG,
+    stream_logging_level: int = logging.INFO,
+) -> None:
+    handlers: List[logging.Handler] = []
+
+    stream_handler = logging.StreamHandler()
+    stream_handler.setLevel(stream_logging_level)
+    stream_handler.setFormatter(
+        logging.Formatter('[%(asctime)s] %(levelname)s %(message)s')
+    )
+    handlers.append(stream_handler)
+
+    if log_file_path is not None:
+        file_handler = logging.FileHandler(filename=log_file_path, mode='w')
+        file_handler.setLevel(log_file_logging_level)
+        file_handler.setFormatter(
+            logging.Formatter(
+                '[%(asctime)s] %(levelname)s [%(processName)s %(threadName)s %(name)s.%(funcName)s:%(lineno)d] %(message)s',
+            )
+        )
+        handlers.append(file_handler)
+
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='[%(asctime)s] %(levelname)s [%(processName)s %(threadName)s %(name)s.%(funcName)s:%(lineno)d] %(message)s',
+        handlers=handlers,
+    )
+
+
 class Logger(object):
-    def __init__(self, runs: int, info: Any | None = None):
-        self.info = info
+    def __init__(self, runs: int):
         self.results: List[Any] = [[] for _ in range(runs)]
 
     def add_result(self, run: int, result: Tuple[float, float, float]) -> None:
