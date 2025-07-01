@@ -4,7 +4,7 @@ from typing import Any, List, Optional, Tuple
 import torch
 
 
-def setup_basic_logging(
+def setup_logging(
     log_file_path: Optional[str] = None,
     log_file_logging_level: int = logging.DEBUG,
     stream_logging_level: int = logging.INFO,
@@ -36,8 +36,7 @@ def setup_basic_logging(
 
 
 class Logger(object):
-    def __init__(self, runs: int, info: Any | None = None):
-        self.info = info
+    def __init__(self, runs: int):
         self.results: List[Any] = [[] for _ in range(runs)]
 
     def add_result(self, run: int, result: Tuple[float, float, float]) -> None:
