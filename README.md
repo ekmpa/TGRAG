@@ -37,5 +37,19 @@ source .venv/bin/activate
 ### Running full data processing scripts
 
 ```sh
-./bash_scripts/end-to-end.sh /bash_scripts/CC-Crawl/2025.txt
+cd bash_scripts
+
+./end-to-end.sh /bash_scripts/CC-Crawl/CC-2025.txt
+```
+
+### Running GNN Baseline Experiment
+
+```sh
+uv run tgrag/experiments/main.py
+```
+
+Alternatively, you can design you own configuration.
+
+```sh
+uv run tgrag/experiments/main.py --config configs/your_config.yaml
 ```
