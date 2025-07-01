@@ -1,8 +1,8 @@
 # CrediGraph
 
-<img align="left" src="img/logo.png" width="200" height="200" />
-
 Data analysis for TG/RAG project @ CDL
+
+<img align="left" src="img/logo.png" width="400" height="400" />
 
 ## Getting Started
 
