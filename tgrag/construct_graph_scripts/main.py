@@ -12,14 +12,14 @@ from tgrag.construct_graph_scripts.subnetwork_construct import (
     construct_subnetwork,
 )
 from tgrag.construct_graph_scripts.temporal_merge import TemporalGraphMerger
-from tgrag.utils.path import get_root_dir
+from tgrag.utils.path import get_crawl_data_path, get_root_dir
 
 parser = argparse.ArgumentParser(
     description='Construct Temporal Dataset.',
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
 )
 parser.add_argument(
-    '--CC-crawl',
+    '--slices',
     nargs='+',
     required=True,
     help='List of CC time-slices to aggregate, e.g., --CC-crawl CC-MAIN-2017-13 CC-MAIN-2017-26',
@@ -33,8 +33,7 @@ parser.add_argument(
 
 def main(slices: List[str], construct_subnetworks: bool) -> None:
     base_path = get_root_dir()
-
-    crawl_path = f'{base_path}/data/crawl-data'
+    crawl_path = get_crawl_data_path(base_path)
     output_dir = os.path.join(crawl_path, 'temporal')
 
     merger = TemporalGraphMerger(output_dir)
@@ -57,7 +56,6 @@ def main(slices: List[str], construct_subnetworks: bool) -> None:
 
         merger.add_graph(crawl_path, vertices_path, edges_path, slice_id)
 
-    merger.save()
     merger.print_overlap()
 
     dqr_path = f'{base_path}/data/dqr/domain_pc1.csv'
@@ -74,4 +72,4 @@ def main(slices: List[str], construct_subnetworks: bool) -> None:
 
 if __name__ == '__main__':
     args = parser.parse_args()
-    main(args.CC_crawl, args.subnetworks)
+    main(args.slices, args.subnetworks)
