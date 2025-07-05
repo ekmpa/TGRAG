@@ -59,7 +59,10 @@ def main(slices: List[str], construct_subnetworks: bool) -> None:
     merger.print_overlap()
 
     dqr_path = f'{base_path}/data/dqr/domain_pc1.csv'
-    temporal_path = f'{base_path}/data/crawl-data/temporal'
+    # temporal_path = f'{base_path}/data/crawl-data/temporal'
+    temporal_path = os.path.join(
+        os.environ.get('SCRATCH', f'{base_path}/data'), 'crawl-data', 'temporal'
+    )
     temporal_edges_df = pd.read_csv(f'{temporal_path}/temporal_edges.csv')
     temporal_vertices_df = pd.read_csv(f'{temporal_path}/temporal_nodes.csv')
     if construct_subnetworks:
